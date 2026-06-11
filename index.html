@@ -1334,9 +1334,17 @@ function setDefaultMaturity() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('invDate').value = today();
-  setDefaultMaturity();
+document.addEventListener('DOMContentLoaded', function() {
+  // Set default date
+  var dateEl = document.getElementById('invDate');
+  if (dateEl) { dateEl.value = today(); setDefaultMaturity(); }
+  // Bind login events
+  var btn = document.getElementById('loginBtn');
+  if (btn) btn.addEventListener('click', doLogin);
+  var pw = document.getElementById('loginPass');
+  if (pw) pw.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  var usr = document.getElementById('loginUser');
+  if (usr) usr.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 });
 
 // When investment date changes, auto-update maturity
@@ -2307,21 +2315,6 @@ renderReturns = function() {
 };
 
 // ====== INIT ======
-// Bind login events
-document.addEventListener('DOMContentLoaded', function() {
-  const loginBtn = document.getElementById('loginBtn');
-  const loginPass = document.getElementById('loginPass');
-  const loginUser = document.getElementById('loginUser');
-  if (loginBtn) loginBtn.addEventListener('click', doLogin);
-  if (loginPass) loginPass.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doLogin();
-  });
-  if (loginUser) loginUser.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doLogin();
-  });
-});
-
-// Check for existing session
 (function() {
   const savedUser = localStorage.getItem('authUser');
   const savedToken = localStorage.getItem('apiToken');
