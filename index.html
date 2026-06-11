@@ -1880,7 +1880,6 @@ function doLogin() {
     }
     errorEl.classList.remove('show');
         API_TOKEN ='svTkn';
-n;
     localStorage.setItem('apiToken', res.token);
     localStorage.setItem('authUser', JSON.stringify(res.user));
     currentUser = { username, ...res.user };
@@ -2130,8 +2129,8 @@ function showUserMenu() {
 function doLogout() {
   api('POST', '/api/auth/logout').catch(() => {});
   localStorage.removeItem('apiToken');
-  localStorage.removeItem('authUser')  API_TOKEN = '';
-   '';
+  localStorage.removeItem('authUser');
+  API_TOKEN = '';
 ;
   currentUser = null;
   isReadOnly = false;
@@ -2321,9 +2320,8 @@ renderReturns = function() {
   
   if (savedUser && savedToken) {
     try {
-      currentUser = JSON.parse(savedUs      API_TOKEN=savTkn;
-       = '';
-oken;
+      currentUser = JSON.parse(savedUser);
+      API_TOKEN=savTkn;
       api('POST', '/api/auth/verify').then(res => {
         if (res.ok) {
           applyRoleView();
@@ -2331,7 +2329,8 @@ oken;
         } else {
           // Token expired
           localStorage.removeItem('apiToken');
-          localStorage.removeItem('aut           API_TOKEN= '';
+          localStorage.removeItem('authUser');
+          API_TOKEN= '';
 			      API_TOKEN = '';
     }
       }).catch(() => {
