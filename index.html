@@ -723,7 +723,8 @@ function api(method, path, body) {
     method,
     headers: { 'Content-Type': 'application/json' }
   };
-  if (API_TOKEN) opts.headers['Authorization'] = 'Bearer ' + API_TOKEN;
+  const token = localStorage.getItem('apiToken');
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
   if (body) opts.body = JSON.stringify(body);
   return fetch(API_BASE + path, opts).then(r => r.json());
 }
@@ -1870,7 +1871,8 @@ function doLogin() {
       return;
     }
     errorEl.classList.remove('show');
-    API_TOKEN = res.token;
+        API_TOKEN ='svTkn';
+n;
     localStorage.setItem('apiToken', res.token);
     localStorage.setItem('authUser', JSON.stringify(res.user));
     currentUser = { username, ...res.user };
@@ -2120,8 +2122,9 @@ function showUserMenu() {
 function doLogout() {
   api('POST', '/api/auth/logout').catch(() => {});
   localStorage.removeItem('apiToken');
-  localStorage.removeItem('authUser');
-  API_TOKEN = '';
+  localStorage.removeItem('authUser')  API_TOKEN = '';
+   '';
+;
   currentUser = null;
   isReadOnly = false;
   document.getElementById('userBadge').style.display = 'none';
@@ -2325,8 +2328,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (savedUser && savedToken) {
     try {
-      currentUser = JSON.parse(savedUser);
-      API_TOKEN = savedToken;
+      currentUser = JSON.parse(savedUs      API_TOKEN=savTkn;
+       = '';
+oken;
       api('POST', '/api/auth/verify').then(res => {
         if (res.ok) {
           applyRoleView();
@@ -2334,9 +2338,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           // Token expired
           localStorage.removeItem('apiToken');
-          localStorage.removeItem('authUser');
-          API_TOKEN = '';
-        }
+          localStorage.removeItem('aut           API_TOKEN= '';
+			      API_TOKEN = '';
+    }
       }).catch(() => {
         // Offline - still try to show
         applyRoleView();
