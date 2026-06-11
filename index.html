@@ -444,13 +444,13 @@
     </div>
     <div class="form-group">
       <label>用户名</label>
-      <input id="loginUser" type="text" placeholder="输入用户名" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="loginUser" type="text" placeholder="输入用户名" autocomplete="username" >
     </div>
     <div class="form-group">
       <label>密码</label>
-      <input id="loginPass" type="password" placeholder="输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <input id="loginPass" type="password" placeholder="输入密码" autocomplete="current-password" >
     </div>
-    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <button class="login-btn" id="loginBtn">登 录</button>
     <div class="login-error" id="loginError">用户名或密码错误</div>
     <div class="forgot-pw">
       <a onclick="showChangePw()">修改密码</a>
@@ -2304,6 +2304,20 @@ renderReturns = function() {
 };
 
 // ====== INIT ======
+// Bind login events
+document.addEventListener('DOMContentLoaded', function() {
+  const loginBtn = document.getElementById('loginBtn');
+  const loginPass = document.getElementById('loginPass');
+  const loginUser = document.getElementById('loginUser');
+  if (loginBtn) loginBtn.addEventListener('click', doLogin);
+  if (loginPass) loginPass.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  if (loginUser) loginUser.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
 // Check for existing session
 (function() {
   const savedUser = localStorage.getItem('authUser');
