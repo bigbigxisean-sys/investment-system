@@ -1718,21 +1718,17 @@ function importData(e) {
   if (!file) return;
   
   const reader = new FileReader();
-  reader.onload = function(ev) {
+  reader.onload = async function(ev) {
     try {
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, { type: 'array' });
-
-      // Read Sheet 1: 投资记录
       const ws1 = wb.Sheets['投资记录'];
       if (!ws1) { alert('导入失败：找不到"投资记录"工作表'); return; }
       const rows = XLSX.utils.sheet_to_json(ws1);
-
       if (rows.length === 0) { alert('导入失败：工作表中没有数据'); return; }
-
-      // Check for header row with field names
       const firstRow = rows[0];
       const hasHeader = '投资人姓名' in firstRow || '投资日期' in firstRow;
+      if (!hasHeader) { alert('导入失败：找不到表头'); return; }
 
       const fieldMap = {
         '投资人姓名': 'investorName',
@@ -1740,106 +1736,71 @@ function importData(e) {
         '到期日': 'maturityDate',
         '投资金额': 'amount',
         '年利率(%)': 'rate',
-        '续投方式': 'reinvestType',
         '经纪人佣金(%)': 'commission',
         '状态': 'status',
         '赎回日期': 'redeemedDate',
-        '备注': 'notes',
-        '(内部ID)': 'id'
+        '备注': 'notes'
       };
 
-      // Validate and import
-      const newInvestments = [];
-      let maxId = state.nextId;
-
+      const items = [];
+      let hadError = false;
       rows.forEach((row, idx) => {
-        if (!hasHeader) return;
         const inv = {};
-
-        // Map Chinese fields to internal keys
-        for (const [cnKey, enKey] of Object.entries(fieldMap)) {
-          let val = row[cnKey];
-          if (val === undefined || val === null || val === '') {
-            if (enKey === 'reinvestType') val = 'none';
-            else if (enKey === 'status') val = 'active';
-            else if (enKey === 'commission') val = 0;
+        for (const [cn, en] of Object.entries(fieldMap)) {
+          let v = row[cn];
+          if (v === undefined || v === null || v === '') {
+            if (en === 'status') v = 'active';
+            else if (en === 'commission') v = 0;
             else continue;
           }
-
-          // Type conversions
-          if (enKey === 'amount' || enKey === 'rate' || enKey === 'commission') {
-            val = parseFloat(val) || 0;
+          if (en === 'amount' || en === 'rate' || en === 'commission') v = parseFloat(v) || 0;
+          if (en === 'investmentDate' || en === 'maturityDate' || en === 'redeemedDate') {
+            if (typeof v === 'number') {
+              const d = new Date((v - 25569) * 86400 * 1000);
+              v = d.toISOString().split('T')[0];
+            } else { v = String(v).trim(); }
           }
-          if (enKey === 'id') {
-            val = parseInt(val) || maxId;
-            maxId = Math.max(maxId, val + 1);
-          }
-          if (enKey === 'investmentDate' || enKey === 'maturityDate' || enKey === 'redeemedDate') {
-            if (typeof val === 'number') {
-              // Excel date serial number
-              const d = new Date((val - 25569) * 86400 * 1000);
-              val = d.toISOString().split('T')[0];
-            } else {
-              val = String(val).trim();
-            }
-          }
-
-          inv[enKey] = val;
+          inv[en] = v;
         }
-
-        // Ensure required fields
-        if (!inv.investorName) {
-          alert(`第 ${idx+2} 行缺少投资人姓名，跳过`);
-          return;
-        }
-        if (!inv.investmentDate || !inv.maturityDate) {
-          alert(`第 ${idx+2} 行缺少投资日期或到期日，跳过`);
-          return;
-        }
-        if (!inv.amount || inv.amount <= 0) {
-          alert(`第 ${idx+2} 行投资金额无效，跳过`);
-          return;
-        }
-
-        // Fill defaults
-        if (!inv.id) inv.id = maxId++;
-        if (!inv.reinvestType) inv.reinvestType = 'none';
-        if (!inv.status) inv.status = 'active';
-        if (!inv.rate) inv.rate = 0;
-        if (!inv.commission) inv.commission = 0;
-
-        newInvestments.push(inv);
+        if (!inv.investorName) { hadError = true; alert(`第${idx+2}行缺姓名`); return; }
+        if (!inv.investmentDate || !inv.maturityDate) { hadError = true; alert(`第${idx+2}行缺日期`); return; }
+        if (!inv.amount || inv.amount <= 0) { hadError = true; alert(`第${idx+2}行金额无效`); return; }
+        if (!inv.rate) inv.rate = 12;
+        if (!inv.commission) inv.commission = 5;
+        items.push(inv);
       });
 
-      if (newInvestments.length === 0) {
-        alert('导入失败：未能读取到有效数据');
-        return;
-      }
+      if (hadError || items.length === 0) { if (!hadError) alert('无有效数据'); return; }
+      if (!confirm(`将从Excel导入${items.length}条到云端数据库，确定吗？`)) return;
 
-      // Confirm with user
-      const msg = `将从 Excel 导入 ${newInvestments.length} 条投资记录。\n当前系统已有 ${state.investments.length} 条记录。\n\n选择导入方式：`;
-      const mode = confirm(`${msg}\n确定=覆盖现有数据  取消=追加到现有数据`);
-      
-      if (mode) {
-        // Overwrite
-        state.investments = newInvestments;
-        state.returns = [];
-      } else {
-        // Append
-        state.investments = [...state.investments, ...newInvestments];
+      let ok = 0, fail = 0;
+      for (let i = 0; i < items.length; i++) {
+        const d = items[i];
+        const body = { investorName: d.investorName, investmentDate: d.investmentDate, maturityDate: d.maturityDate, amount: d.amount, rate: d.rate, commission: d.commission, notes: d.notes || '' };
+        try {
+          const r = await api('POST', '/api/investments', body);
+          if (r.ok) {
+            ok++;
+            if (d.status === 'redeemed' && d.redeemedDate) {
+              const days = Math.ceil((new Date(d.maturityDate) - new Date(d.investmentDate)) / 86400000);
+              const interest = d.amount * (d.rate / 100) * days / 365;
+              await api('POST', '/api/investments/returns/add', { investId: r.id, date: d.redeemedDate, type: 'interest_earned', amount: interest, note: d.investorName + '·利息' });
+              if (d.commission > 0) {
+                const comm = d.amount * (d.commission / 100) * days / 365;
+                await api('POST', '/api/investments/returns/add', { investId: r.id, date: d.redeemedDate, type: 'commission', amount: comm, note: d.investorName + '·佣金' });
+              }
+            }
+          } else { fail++; }
+        } catch(e) { fail++; }
       }
-      state.nextId = maxId;
-
-      saveState();
-      renderAll();
-      alert(`✅ 导入成功！\n共导入 ${newInvestments.length} 条投资记录`);
-    } catch(e) {
-      alert('导入失败：' + e.message);
-    }
+      await loadAllData();
+      alert('导入完成！成功' + ok + '条' + (fail ? '，失败' + fail + '条' : ''));
+    } catch(e) { alert('导入失败：' + e.message); }
   };
   reader.readAsArrayBuffer(file);
   e.target.value = '';
 }
+
 
 // ====== TAB SWITCHING ======
 function switchTab(tab) {
