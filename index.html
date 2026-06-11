@@ -310,6 +310,8 @@
       background: var(--green); display: inline-block;
     }
 
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* Chart - Vertical Bar (transposed) */
     .vchart-wrap {
       padding: 8px 0; position: relative;
@@ -453,6 +455,14 @@
     <div class="forgot-pw">
       <a onclick="showChangePw()">修改密码</a>
     </div>
+  </div>
+</div>
+
+<!-- Data Loading Overlay -->
+<div id="dataLoading" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+  <div style="text-align:center;">
+    <div style="width:40px;height:40px;margin:0 auto 16px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <p style="color:var(--secondary);font-size:14px;">加载数据中...</p>
   </div>
 </div>
 
@@ -704,16 +714,52 @@
 </div>
 
 <script>
+// ====== API CONFIG ======
+const API_BASE = 'https://investment-system-api.up.railway.app';
+let API_TOKEN = localStorage.getItem('apiToken') || '';
+
+function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (API_TOKEN) opts.headers['Authorization'] = 'Bearer ' + API_TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(API_BASE + path, opts).then(r => r.json());
+}
+
 // ====== STATE ======
-const STORAGE_KEY = 'investmentSystem';
-let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-  investments: [],
-  nextId: 1,
-  returns: [] // {id, investId, date, type: 'interest_earned'|'commission', amount, note}
-};
+let state = { investments: [], returns: [], nextId: 1 };
+let dataLoaded = false;
+
+async function loadAllData() {
+  try {
+    const [invRes, retRes] = await Promise.all([
+      api('GET', '/api/investments'),
+      api('GET', '/api/investments/returns/list')
+    ]);
+    if (invRes.ok) state.investments = invRes.data || [];
+    if (retRes.ok) state.returns = retRes.data || [];
+    state.nextId = Math.max(...state.investments.map(i => i.id), 0) + 1;
+    dataLoaded = true;
+    renderAll();
+    // Hide loading
+    const loader = document.getElementById('dataLoading');
+    if (loader) loader.style.display = 'none';
+  } catch(e) {
+    console.error('Failed to load data:', e);
+    document.getElementById('dataLoading').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>无法连接服务器</p>
+        <p style="font-size:13px;margin-top:8px;color:var(--secondary);">请检查网络连接后刷新页面</p>
+      </div>`;
+  }
+}
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Don't need to save locally - data is on server
+  // Individual CRUD operations call the API directly
 }
 
 // ====== HELPERS ======
@@ -1299,7 +1345,6 @@ document.addEventListener('change', (e) => {
 
 function saveInvestment(e) {
   e.preventDefault();
-  
   const editId = document.getElementById('editId').value;
   const data = {
     investorName: document.getElementById('invName').value.trim(),
@@ -1307,40 +1352,25 @@ function saveInvestment(e) {
     maturityDate: document.getElementById('invMaturity').value,
     amount: parseFloat(document.getElementById('invAmount').value),
     rate: parseFloat(document.getElementById('invRate').value),
-    reinvestType: 'none',
     commission: parseFloat(document.getElementById('invCommission').value) || 0,
     notes: document.getElementById('invNotes').value.trim()
   };
 
-  // Validation
   if (data.maturityDate <= data.investmentDate) {
     alert('到期日必须晚于投资日期！');
     return;
   }
 
-  if (editId) {
-    // Edit existing
-    const idx = state.investments.findIndex(i => i.id === parseInt(editId));
-    if (idx >= 0) {
-      // Preserve status
-      const oldStatus = state.investments[idx].status;
-      state.investments[idx] = { ...state.investments[idx], ...data, status: oldStatus };
-    }
-  } else {
-    // New investment
-    const inv = {
-      id: state.nextId++,
-      ...data,
-      status: 'active',
-      createdAt: today()
-    };
-    state.investments.push(inv);
-  }
+  const save = editId
+    ? api('PUT', '/api/investments/' + editId, data)
+    : api('POST', '/api/investments', data);
 
-  saveState();
-  closeModal('investmentModal');
-  resetForm();
-  renderAll();
+  save.then(res => {
+    if (!res.ok) { alert(res.error || '保存失败'); return; }
+    closeModal('investmentModal');
+    resetForm();
+    loadAllData();
+  }).catch(() => alert('服务器连接失败'));
 }
 
 function editInvestment(id) {
@@ -1368,10 +1398,10 @@ function deleteInvestment(id) {
   if (!inv) return;
   if (!confirm(`确定删除 "${inv.investorName}" 的 ¥${fmt(inv.amount)} 投资记录吗？\n此操作不可撤销。`)) return;
   
-  state.investments = state.investments.filter(i => i.id !== id);
-  state.returns = state.returns.filter(r => r.investId !== id);
-  saveState();
-  renderAll();
+  api('DELETE', '/api/investments/' + id).then(res => {
+    if (!res.ok) { alert(res.error || '删除失败'); return; }
+    loadAllData();
+  }).catch(() => alert('服务器连接失败'));
 }
 
 function resetForm() {
@@ -1424,37 +1454,31 @@ function confirmRedeem() {
 
   if (!confirm(`确认赎回 "${inv.investorName}" 的 ¥${fmt(inv.amount)} 投资？`)) return;
 
-  // Mark as redeemed
-  inv.status = 'redeemed';
-  inv.redeemedDate = redeemDate;
-
-  // Record returns
-  if (actualInterest > 0) {
-    state.returns.push({
-      id: state.returns.length + 1,
-      investId: inv.id,
-      date: redeemDate,
-      type: 'interest_earned',
-      amount: actualInterest,
-      note: `${inv.investorName} · 到期利息 · #${inv.id}`
-    });
-  }
-
-  if (actualCommission > 0) {
-    state.returns.push({
-      id: state.returns.length + 1,
-      investId: inv.id,
-      date: redeemDate,
-      type: 'commission',
-      amount: actualCommission,
-      note: `${inv.investorName} · 经纪人佣金 · #${inv.id}`
-    });
-  }
-
-  saveState();
-  closeModal('redeemModal');
-  redeemingId = null;
-  renderAll();
+  // Update investment status via API
+  api('PATCH', '/api/investments/' + redeemingId + '/redeem', {
+    status: 'redeemed', redeemedDate: redeemDate
+  }).then(res => {
+    if (!res.ok) { alert(res.error || '赎回失败'); return; }
+    // Record returns
+    const promises = [];
+    if (actualInterest > 0) {
+      promises.push(api('POST', '/api/investments/returns/add', {
+        investId: redeemingId, date: redeemDate, type: 'interest_earned', amount: actualInterest,
+        note: `${inv.investorName} · 到期利息 · #${redeemingId}`
+      }));
+    }
+    if (actualCommission > 0) {
+      promises.push(api('POST', '/api/investments/returns/add', {
+        investId: redeemingId, date: redeemDate, type: 'commission', amount: actualCommission,
+        note: `${inv.investorName} · 经纪人佣金 · #${redeemingId}`
+      }));
+    }
+    return Promise.all(promises);
+  }).then(() => {
+    closeModal('redeemModal');
+    redeemingId = null;
+    loadAllData();
+  }).catch(() => alert('服务器连接失败'));
 }
 
 // ====== REINVEST ======
@@ -1831,63 +1855,30 @@ function renderAll() {
 }
 
 // ====== AUTH SYSTEM ======
-const AUTH_STORAGE_KEY = 'investAuth';
-const AUTH_USERS_KEY = 'investUsers';
-
-// Default users
-const DEFAULT_USERS = {
-  xiaoting: { password: '860601', role: 'broker', name: '晓婷' },
-  daishenglan: { password: 'initial', role: 'viewer', name: '戴胜兰', viewAll: true },
-  wangxi: { password: 'initial', role: 'investor', name: '王希' }
-};
-
-function getUsers() {
-  let saved = localStorage.getItem(AUTH_USERS_KEY);
-  if (saved) {
-    try { return { ...DEFAULT_USERS, ...JSON.parse(saved) }; }
-    catch(e) { return { ...DEFAULT_USERS }; }
-  }
-  return { ...DEFAULT_USERS };
-}
-
-function saveUsers(users) {
-  // Only save overridden passwords (don't save defaults that are unchanged)
-  const overrides = {};
-  for (const [u, data] of Object.entries(users)) {
-    if (DEFAULT_USERS[u] && DEFAULT_USERS[u].password !== data.password) {
-      overrides[u] = data;
-    } else if (!DEFAULT_USERS[u]) {
-      overrides[u] = data;
-    }
-  }
-  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(overrides));
-}
-
 let currentUser = null;
 let isReadOnly = false;
 
 function doLogin() {
   const username = document.getElementById('loginUser').value.trim().toLowerCase();
   const password = document.getElementById('loginPass').value;
-  const users = getUsers();
   const errorEl = document.getElementById('loginError');
   
-  if (!users[username] || users[username].password !== password) {
-    errorEl.textContent = '用户名或密码错误';
+  api('POST', '/api/auth/login', { username, password }).then(res => {
+    if (!res.ok) {
+      errorEl.textContent = res.error || '用户名或密码错误';
+      errorEl.classList.add('show');
+      return;
+    }
+    errorEl.classList.remove('show');
+    API_TOKEN = res.token;
+    localStorage.setItem('apiToken', res.token);
+    localStorage.setItem('authUser', JSON.stringify(res.user));
+    currentUser = { username, ...res.user };
+    applyRoleView();
+  }).catch(() => {
+    errorEl.textContent = '无法连接服务器';
     errorEl.classList.add('show');
-    return;
-  }
-  
-  errorEl.classList.remove('show');
-  currentUser = { username, ...users[username] };
-  
-  // Save session
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-    username, time: Date.now()
-  }));
-  
-  // Apply role-based view
-  applyRoleView();
+  });
 }
 
 function applyRoleView() {
@@ -1903,7 +1894,8 @@ function applyRoleView() {
     isReadOnly = false;
     document.querySelectorAll('.header-actions .btn-primary, .header-actions .btn-outline').forEach(b => b.style.display = '');
     document.querySelector('.tabs').style.display = 'flex';
-    renderAll();
+    document.getElementById('dataLoading').style.display = 'flex';
+    loadAllData();
   } else {
     // Read-only view
     isReadOnly = true;
@@ -2126,7 +2118,10 @@ function showUserMenu() {
 }
 
 function doLogout() {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+  api('POST', '/api/auth/logout').catch(() => {});
+  localStorage.removeItem('apiToken');
+  localStorage.removeItem('authUser');
+  API_TOKEN = '';
   currentUser = null;
   isReadOnly = false;
   document.getElementById('userBadge').style.display = 'none';
@@ -2169,48 +2164,35 @@ function doChangePw() {
   const msgEl = document.getElementById('cpMsg');
   
   if (!username) {
-    msgEl.textContent = '请输入用户名';
-    msgEl.className = 'change-pw-msg error';
+    msgEl.textContent = '请输入用户名'; msgEl.className = 'change-pw-msg error';
     return;
   }
-  
-  const users = getUsers();
-  if (!users[username]) {
-    msgEl.textContent = '用户不存在';
-    msgEl.className = 'change-pw-msg error';
-    return;
-  }
-  
-  if (users[username].password !== oldPass) {
-    msgEl.textContent = '当前密码错误';
-    msgEl.className = 'change-pw-msg error';
-    return;
-  }
-  
   if (newPass.length < 6) {
-    msgEl.textContent = '新密码至少6位';
-    msgEl.className = 'change-pw-msg error';
+    msgEl.textContent = '新密码至少6位'; msgEl.className = 'change-pw-msg error';
     return;
   }
-  
   if (newPass !== confirmPass) {
-    msgEl.textContent = '两次密码输入不一致';
-    msgEl.className = 'change-pw-msg error';
+    msgEl.textContent = '两次密码输入不一致'; msgEl.className = 'change-pw-msg error';
     return;
   }
   
-  // Update password
-  users[username].password = newPass;
-  saveUsers(users);
-  
-  msgEl.textContent = '✅ 密码修改成功！';
-  msgEl.className = 'change-pw-msg success';
-  
-  document.getElementById('cpOldPass').value = '';
-  document.getElementById('cpNewPass').value = '';
-  document.getElementById('cpConfirmPass').value = '';
-  
-  setTimeout(hideChangePw, 1500);
+  api('POST', '/api/auth/change-password', { username, oldPassword: oldPass, newPassword: newPass })
+    .then(res => {
+      if (!res.ok) {
+        msgEl.textContent = res.error || '修改失败';
+        msgEl.className = 'change-pw-msg error';
+        return;
+      }
+      msgEl.textContent = '✅ 密码修改成功！';
+      msgEl.className = 'change-pw-msg success';
+      document.getElementById('cpOldPass').value = '';
+      document.getElementById('cpNewPass').value = '';
+      document.getElementById('cpConfirmPass').value = '';
+      setTimeout(hideChangePw, 1500);
+    }).catch(() => {
+      msgEl.textContent = '无法连接服务器';
+      msgEl.className = 'change-pw-msg error';
+    });
 }
 
 // ====== OVERRIDES for read-only mode ======
@@ -2321,31 +2303,41 @@ renderReturns = function() {
   origRenderReturns();
 };
 
-// ====== INIT AUTH ======
+// ====== INIT ======
 // Check for existing session
 (function() {
-  const session = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (session) {
+  const savedUser = localStorage.getItem('authUser');
+  const savedToken = localStorage.getItem('apiToken');
+  
+  if (savedUser && savedToken) {
     try {
-      const data = JSON.parse(session);
-      const users = getUsers();
-      if (users[data.username]) {
-        currentUser = { username: data.username, ...users[data.username] };
-        // Defer to after DOM is ready
-        setTimeout(applyRoleView, 100);
-        return;
-      }
+      currentUser = JSON.parse(savedUser);
+      API_TOKEN=***      // Verify token is still valid
+      api('POST', '/api/auth/verify').then(res => {
+        if (res.ok) {
+          applyRoleView();
+          if (!isReadOnly) loadAllData();
+        } else {
+          // Token expired
+          localStorage.removeItem('apiToken');
+          localStorage.removeItem('authUser');
+          API_TOKEN=***          document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+      }).catch(() => {
+        // Offline - still try to show
+        applyRoleView();
+        if (!isReadOnly) loadAllData();
+      });
+      return;
     } catch(e) {}
   }
-  // Show login overlay
-  setTimeout(() => {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-  }, 50);
+  document.getElementById('loginOverlay').classList.remove('hidden');
 })();
 
 // Override renderAll to check read-only
 const origRenderAll = renderAll;
 renderAll = function() {
+  if (!dataLoaded && isReadOnly) return;
   if (isReadOnly) {
     renderDashboard();
     renderForecast();
