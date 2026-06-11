@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投资管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f8f7f4; --card: #ffffff; --text: #1a1a2e;
+      --secondary: #6b7280; --border: 1px solid #e5e7eb;
+      --accent: #2563eb; --accent-light: #eff6ff;
+      --green: #16a34a; --green-light: #f0fdf4;
+      --orange: #ea580c; --orange-light: #fff7ed;
+      --red: #dc2626; --red-light: #fef2f2;
+      --purple: #7c3aed; --purple-light: #f5f3ff;
+      --radius: 12px; --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+    /* Header */
+    header {
+      background: var(--card); border-bottom: var(--border);
+      padding: 18px 0; position: sticky; top: 0; z-index: 100;
+    }
+    header .container {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+    .logo-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      border: none; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #15803d; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover { background: #c2410c; }
+    .btn-outline { background: transparent; color: var(--text); border: var(--border); }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-red:hover { background: #b91c1c; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* Dashboard cards */
+    .dash-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px; margin: 20px 0;
+    }
+    .dash-card {
+      background: var(--card); border-radius: var(--radius);
+      border: var(--border); padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .dash-card .label { font-size: 12px; color: var(--secondary); font-weight: 500; }
+    .dash-card .value { font-size: 24px; font-weight: 700; margin: 4px 0; }
+    .dash-card .sub { font-size: 12px; color: var(--secondary); }
+    .dash-card.accent { border-left: 3px solid var(--accent); }
+    .dash-card.green { border-left: 3px solid var(--green); }
+    .dash-card.orange { border-left: 3px solid var(--orange); }
+    .dash-card.purple { border-left: 3px solid var(--purple); }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 4px; margin: 16px 0;
+      background: var(--card); border-radius: var(--radius);
+      padding: 4px; border: var(--border);
+    }
+    .tab {
+      flex: 1; padding: 10px; text-align: center;
+      border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; background: transparent;
+      color: var(--secondary); transition: all 0.15s;
+    }
+    .tab:hover { background: var(--bg); }
+    .tab.active { background: var(--accent); color: #fff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card); border-radius: var(--radius);
+      border: var(--border); overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 10px 12px;
+      font-weight: 500; color: var(--secondary);
+      border-bottom: var(--border); background: var(--bg);
+      white-space: nowrap; font-size: 12px;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 9999px; font-size: 11px; font-weight: 600;
+    }
+    .badge-green { background: var(--green-light); color: var(--green); }
+    .badge-blue { background: var(--accent-light); color: var(--accent); }
+    .badge-orange { background: var(--orange-light); color: var(--orange); }
+    .badge-red { background: var(--red-light); color: var(--red); }
+    .badge-purple { background: var(--purple-light); color: var(--purple); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 200;
+      align-items: center; justify-content: center;
+      overflow-y: auto; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--card); border-radius: var(--radius);
+      padding: 28px; max-width: 560px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 20px; }
+    .modal .close {
+      float: right; border: none; background: none;
+      font-size: 22px; cursor: pointer; color: var(--secondary);
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 500;
+      margin-bottom: 4px; color: var(--text);
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+      border: var(--border); font-size: 14px; font-family: inherit;
+      outline: none; transition: border 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Per-investor card */
+    .investor-card {
+      background: var(--card); border-radius: var(--radius);
+      border: var(--border); padding: 16px 20px;
+      margin-bottom: 12px; box-shadow: var(--shadow);
+    }
+    .investor-header {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .investor-name { font-size: 16px; font-weight: 600; }
+    .investor-stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+    .investor-stat .num { font-weight: 700; }
+
+    /* Search */
+    .search-bar {
+      display: flex; gap: 8px; margin-bottom: 12px;
+    }
+    .search-bar input {
+      flex: 1; padding: 8px 12px; border-radius: var(--radius-sm);
+      border: var(--border); font-size: 13px; outline: none;
+    }
+    .search-bar input:focus { border-color: var(--accent); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+      color: var(--secondary);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* Sub-investment list (inside investor card) */
+    .sub-investments { margin-top: 8px; }
+    .sub-inv {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 6px 0;
+      border-bottom: 1px solid #f3f4f6; font-size: 13px;
+      flex-wrap: wrap; gap: 4px;
+    }
+    .sub-inv:last-child { border-bottom: none; }
+    .sub-inv .inv-meta { color: var(--secondary); font-size: 12px; }
+
+    .actions-cell { white-space: nowrap; }
+    .actions-cell button { margin-left: 4px; }
+
+    /* Login */
+    .login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .login-overlay.hidden { display: none; }
+    .login-box {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 40px 36px;
+      width: 360px; max-width: 90vw;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .login-box .logo-area {
+      text-align: center; margin-bottom: 28px;
+    }
+    .login-box .logo-area .icon {
+      font-size: 48px; margin-bottom: 8px;
+    }
+    .login-box .logo-area h1 {
+      color: #fff; font-size: 20px; font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .login-box .logo-area p {
+      color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 4px;
+    }
+    .login-box .form-group { margin-bottom: 16px; }
+    .login-box label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,0.6); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .login-box input {
+      width: 100%; padding: 12px 14px;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #fff; font-size: 15px; outline: none;
+      transition: all 0.2s; box-sizing: border-box;
+    }
+    .login-box input:focus {
+      border-color: rgba(37,99,235,0.6);
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+    .login-box input::placeholder { color: rgba(255,255,255,0.25); }
+    .login-box .login-btn {
+      width: 100%; padding: 12px; margin-top: 4px;
+      border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .login-box .login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(37,99,235,0.3); }
+    .login-box .login-btn:active { transform: translateY(0); }
+    .login-box .login-error {
+      color: #f87171; font-size: 13px; text-align: center;
+      margin-top: 12px; display: none;
+    }
+    .login-box .login-error.show { display: block; }
+    .login-box .forgot-pw {
+      text-align: center; margin-top: 16px;
+    }
+    .login-box .forgot-pw a {
+      color: rgba(255,255,255,0.4); font-size: 13px;
+      text-decoration: none; cursor: pointer;
+    }
+    .login-box .forgot-pw a:hover { color: rgba(255,255,255,0.7); }
+
+    /* Change password modal (dark theme) */
+    .change-pw-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.6); display: none;
+      align-items: center; justify-content: center;
+    }
+    .change-pw-overlay.show { display: flex; }
+    .change-pw-box {
+      background: var(--card); border-radius: var(--radius);
+      padding: 28px; width: 360px; max-width: 90vw;
+    }
+    .change-pw-box h3 { font-size: 17px; margin-bottom: 20px; }
+    .change-pw-box .form-group { margin-bottom: 14px; }
+    .change-pw-box label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px; }
+    .change-pw-box input {
+      width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+      border: var(--border); font-size: 14px; outline: none;
+      box-sizing: border-box;
+    }
+    .change-pw-box input:focus { border-color: var(--accent); }
+    .change-pw-msg { font-size: 13px; margin-top: 8px; display: none; }
+    .change-pw-msg.success { color: var(--green); display: block; }
+    .change-pw-msg.error { color: var(--red); display: block; }
+
+    /* User badge in header */
+    .user-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px 4px 8px; border-radius: 9999px;
+      background: var(--accent-light); color: var(--accent);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .user-badge:hover { border-color: var(--accent); }
+    .user-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); display: inline-block;
+    }
+
+    /* Chart - Vertical Bar (transposed) */
+    .vchart-wrap {
+      padding: 8px 0; position: relative;
+    }
+    .vchart-container {
+      display: flex; gap: 0; align-items: flex-end;
+      min-height: 280px; position: relative;
+      padding-left: 72px;
+    }
+    /* Y-axis */
+    .vchart-yaxis {
+      position: absolute; left: 0; top: 0; bottom: 32px;
+      width: 68px; display: flex; flex-direction: column;
+      justify-content: space-between; padding-bottom: 4px;
+    }
+    .vchart-ylabel {
+      font-size: 10px; color: var(--secondary);
+      text-align: right; padding-right: 6px;
+      border-top: 1px dashed #e5e7eb;
+      line-height: 0; position: relative;
+    }
+    .vchart-ylabel span {
+      background: var(--card); padding-right: 4px;
+      position: relative; top: -5px;
+    }
+    .vchart-yaxis-zero {
+      border-top: 1px solid var(--border);
+    }
+    /* Month columns */
+    .vchart-col {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; position: relative;
+      height: 248px; min-width: 0;
+    }
+    .vchart-col-bars {
+      flex: 1; width: 100%; display: flex;
+      flex-direction: column; justify-content: flex-end;
+      gap: 2px; position: relative;
+    }
+    .vchart-col-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      position: relative; transition: opacity 0.2s;
+      cursor: pointer; min-height: 2px;
+    }
+    .vchart-col-bar:hover { opacity: 0.85; }
+    .vchart-col-bar .bar-total {
+      position: absolute; top: -18px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+      color: var(--text); opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .vchart-col-bar:hover .bar-total { opacity: 1; }
+    .vchart-col-empty {
+      width: 100%; background: var(--bg);
+      border-radius: 4px 4px 0 0;
+    }
+    .vchart-col-label {
+      font-size: 11px; font-weight: 600; padding: 4px 0 1px;
+      color: var(--text); text-align: center; width: 100%;
+    }
+    .vchart-col-label.is-this { color: var(--accent); }
+    .vchart-col-label.is-past { color: var(--secondary); }
+    .vchart-col-amount {
+      font-size: 9px; color: var(--secondary);
+      text-align: center; width: 100%; line-height: 1.2;
+      max-height: 24px; overflow: hidden;
+    }
+    /* Detail panel */
+    .vchart-detail-panel {
+      margin-top: 8px; border-radius: var(--radius-sm);
+      background: var(--bg); padding: 10px 14px;
+      font-size: 12px; display: none;
+    }
+    .vchart-detail-panel.open { display: block; }
+    .vchart-detail-header {
+      font-weight: 600; margin-bottom: 6px; padding-bottom: 4px;
+      border-bottom: var(--border);
+    }
+    .vchart-detail-item {
+      display: flex; justify-content: space-between;
+      padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    .vchart-detail-item:last-child { border-bottom: none; }
+    .vchart-detail-dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 3px; margin-right: 6px; vertical-align: middle;
+    }
+    .vchart-detail-total {
+      border-top: 2px solid var(--border); margin-top: 4px;
+      padding-top: 6px; font-weight: 700;
+    }
+    /* Legend */
+    .vchart-legend {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 10px; padding-top: 8px;
+      border-top: var(--border);
+    }
+    .vchart-legend-item {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; color: var(--secondary);
+      cursor: pointer;
+    }
+    .vchart-legend-dot {
+      width: 12px; height: 12px; border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 700px) {
+      .form-row { grid-template-columns: 1fr; }
+      .dash-grid { grid-template-columns: 1fr 1fr; }
+      .investor-stats { flex-direction: column; gap: 4px; }
+      .vchart-container { padding-left: 48px; min-height: 200px; }
+      .vchart-yaxis { width: 44px; }
+      .vchart-col { height: 180px; }
+      .vchart-col-amount { display: none; }
+    }
+  </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="logo-area">
+      <div class="icon">💰</div>
+      <h1>投资管理系统</h1>
+      <p>请登录以继续</p>
+    </div>
+    <div class="form-group">
+      <label>用户名</label>
+      <input id="loginUser" type="text" placeholder="输入用户名" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input id="loginPass" type="password" placeholder="输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError">用户名或密码错误</div>
+    <div class="forgot-pw">
+      <a onclick="showChangePw()">修改密码</a>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="change-pw-overlay" id="changePwOverlay">
+  <div class="change-pw-box">
+    <h3>🔑 修改密码</h3>
+    <div class="form-group">
+      <label>当前用户名</label>
+      <input id="cpUser" type="text" readonly style="background:var(--bg);cursor:default;">
+    </div>
+    <div class="form-group">
+      <label>当前密码</label>
+      <input id="cpOldPass" type="password" placeholder="输入当前密码">
+    </div>
+    <div class="form-group">
+      <label>新密码</label>
+      <input id="cpNewPass" type="password" placeholder="输入新密码 (至少6位)">
+    </div>
+    <div class="form-group">
+      <label>确认新密码</label>
+      <input id="cpConfirmPass" type="password" placeholder="再次输入新密码">
+    </div>
+    <div class="change-pw-msg" id="cpMsg"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-primary" style="flex:1;padding:12px;justify-content:center;" onclick="doChangePw()">确认修改</button>
+      <button class="btn btn-outline" onclick="hideChangePw()">取消</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">💰</div>
+      <span>投资管理系统</span>
+    </div>
+    <div class="header-actions">
+      <span class="user-badge" id="userBadge" onclick="showUserMenu()" style="display:none;">
+        <span class="dot"></span><span id="userNameDisplay"></span> ▼
+      </span>
+      <button class="btn btn-primary" onclick="showModal('investmentModal')">+ 新增投资</button>
+      <button class="btn btn-outline" onclick="exportData()">📥 导出 Excel</button>
+      <button class="btn btn-outline" onclick="document.getElementById('importInput').click()">📤 导入 Excel</button>
+      <input type="file" id="importInput" accept=".xlsx,.xls" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- Dashboard -->
+  <div class="dash-grid" id="dashboardCards"></div>
+
+  <!-- Yearly Maturity Chart -->
+  <div class="section-card" id="forecastSection" style="background:var(--card);border-radius:var(--radius);border:var(--border);padding:16px 20px;margin-bottom:16px;box-shadow:var(--shadow);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+      <div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;">
+        📊 年度到期分析
+        <span style="font-size:11px;font-weight:400;color:var(--secondary);">点击柱形查看投资人明细</span>
+      </div>
+      <select id="chartYearSelect" onchange="switchChartYear(parseInt(this.value))" style="padding:4px 10px;border-radius:9999px;border:var(--border);font-size:13px;font-weight:500;background:var(--card);cursor:pointer;"></select>
+    </div>
+    <div id="forecastContainer" class="vchart-wrap"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="list">📋 投资列表</button>
+    <button class="tab" data-tab="investors">👥 按投资人</button>
+    <button class="tab" data-tab="returns">📈 收益记录</button>
+  </div>
+
+  <!-- Tab: Investment List -->
+  <div class="tab-content active" id="tab-list">
+    <div class="search-bar">
+      <input id="searchInput" placeholder="🔍 搜索投资人姓名..." oninput="renderList()">
+      <select id="statusFilter" onchange="renderList()" style="padding:8px;border-radius:8px;border:var(--border);font-size:13px;">
+        <option value="all">全部状态</option>
+        <option value="active">投资中</option>
+        <option value="matured">已到期</option>
+        <option value="redeemed">已赎回</option>
+      </select>
+    </div>
+    <div class="table-wrap" id="listTable"></div>
+  </div>
+
+  <!-- Tab: By Investor -->
+  <div class="tab-content" id="tab-investors">
+    <div class="search-bar">
+      <input id="investorSearch" placeholder="🔍 搜索投资人..." oninput="renderInvestors()">
+    </div>
+    <div id="investorList"></div>
+  </div>
+
+  <!-- Tab: Returns -->
+  <div class="tab-content" id="tab-returns">
+    <div class="dash-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="dash-card green">
+        <div class="label">已实现收益</div>
+        <div class="value" id="realizedReturns">0</div>
+      </div>
+      <div class="dash-card orange">
+        <div class="label">待收收益（未到期）</div>
+        <div class="value" id="pendingReturns">0</div>
+      </div>
+      <div class="dash-card accent">
+        <div class="label">累计管理规模</div>
+        <div class="value" id="totalManagedVolume">0</div>
+      </div>
+    </div>
+    <div class="table-wrap" id="returnsTable"></div>
+  </div>
+</main>
+
+<!-- Modal: New/Edit Investment -->
+<div class="modal-overlay" id="investmentModal">
+  <div class="modal">
+    <button class="close" onclick="closeModal('investmentModal')">✕</button>
+    <h2 id="modalTitle">新增投资</h2>
+    <form id="investmentForm" onsubmit="saveInvestment(event)">
+      <input type="hidden" id="editId" value="">
+      <div class="form-group">
+        <label>投资人姓名 *</label>
+        <input id="invName" required placeholder="请输入姓名">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>投资日期 *</label>
+          <input id="invDate" type="date" required>
+        </div>
+        <div class="form-group">
+          <label>到期日 *</label>
+          <input id="invMaturity" type="date" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>投资金额 (元) *</label>
+          <input id="invAmount" type="number" min="0" step="0.01" required placeholder="如: 100000">
+        </div>
+        <div class="form-group">
+          <label>年利率 (%) *</label>
+          <input id="invRate" type="number" min="0" step="0.01" required value="12" placeholder="如: 12">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>经纪人佣金 (%)</label>
+          <input id="invCommission" type="number" min="0" step="0.01" value="5" placeholder="如: 5">
+        </div>
+        <div class="form-group">
+          <label> </label>
+          <input type="text" style="opacity:0;cursor:default;" disabled>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="invNotes" rows="2" placeholder="可选备注"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;padding:12px;justify-content:center;">保存</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('investmentModal')">取消</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Redeem -->
+<div class="modal-overlay" id="redeemModal">
+  <div class="modal">
+    <button class="close" onclick="closeModal('redeemModal')">✕</button>
+    <h2>赎回确认</h2>
+    <div id="redeemInfo"></div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>实际赎回日期</label>
+      <input id="redeemDate" type="date">
+    </div>
+    <div class="form-group">
+      <label>实际支付利息 (元)</label>
+      <input id="redeemInterest" type="number" step="0.01" placeholder="按合同计算的到期利息">
+    </div>
+    <div class="form-group">
+      <label>经纪人实际收到佣金 (元)</label>
+      <input id="redeemCommission" type="number" step="0.01" placeholder="本次收到的佣金">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-orange" style="flex:1;padding:12px;justify-content:center;" onclick="confirmRedeem()">确认赎回</button>
+      <button class="btn btn-outline" onclick="closeModal('redeemModal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reinvest -->
+<div class="modal-overlay" id="reinvestModal">
+  <div class="modal">
+    <button class="close" onclick="closeModal('reinvestModal')">✕</button>
+    <h2>续投设置</h2>
+    <div id="reinvestInfo" style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px;"></div>
+    <form id="reinvestForm" onsubmit="confirmReinvest(event)">
+      <input type="hidden" id="reinvestId" value="">
+      <div class="form-row">
+        <div class="form-group">
+          <label>续投开始日 *</label>
+          <input id="reinvestStart" type="date" required>
+        </div>
+        <div class="form-group">
+          <label>续投到期日 *</label>
+          <input id="reinvestEnd" type="date" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>续投利率 (%) *</label>
+          <input id="reinvestRate" type="number" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>续投方式</label>
+          <select id="reinvestMethod">
+            <option value="all">本息续投 — 本金+利息滚入下一期</option>
+            <option value="interest">利息续投 — 只把利息续投，本金赎回</option>
+            <option value="partial">部分续投 — 指定续投金额</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="partialAmountGroup" style="display:none;">
+        <label>续投金额 (元)</label>
+        <input id="reinvestAmount" type="number" min="0" step="0.01" placeholder="输入要续投的金额">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>本次支付利息 (元)</label>
+          <input id="reinvestInterest" type="number" step="0.01" readonly style="background:var(--bg);">
+        </div>
+        <div class="form-group">
+          <label>经纪人佣金 (元)</label>
+          <input id="reinvestCommission" type="number" step="0.01" readonly style="background:var(--bg);">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="reinvestNotes" rows="2" placeholder="续投备注（可选）"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button type="submit" class="btn btn-green" style="flex:1;padding:12px;justify-content:center;">确认续投</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('reinvestModal')">取消</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ====== STATE ======
+const STORAGE_KEY = 'investmentSystem';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+  investments: [],
+  nextId: 1,
+  returns: [] // {id, investId, date, type: 'interest_earned'|'commission', amount, note}
+};
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ====== HELPERS ======
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmt(n) {
+  if (n === undefined || n === null) return '0.00';
+  return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(d) {
+  if (!d) return '-';
+  const parts = d.split('-');
+  return `${parts[0]}.${parts[1]}.${parts[2]}`;
+}
+
+function daysBetween(d1, d2) {
+  return Math.ceil((new Date(d2) - new Date(d1)) / 86400000);
+}
+
+function calcInterest(amount, rate, days) {
+  return amount * (rate / 100) * days / 365;
+}
+
+function getStatus(inv) {
+  const now = today();
+  if (inv.status === 'redeemed') return 'redeemed';
+  if (inv.maturityDate < now) return 'matured';
+  return 'active';
+}
+
+function getStatusBadge(status) {
+  const map = {
+    active: '<span class="badge badge-green">投资中</span>',
+    matured: '<span class="badge badge-orange">已到期</span>',
+    redeemed: '<span class="badge badge-blue">已赎回</span>'
+  };
+  return map[status] || status;
+}
+
+function getReinvestLabel(type) {
+  const map = {
+    none: '不续投',
+    interest: '利息续投',
+    all: '本息续投'
+  };
+  return map[type] || '不续投';
+}
+
+// ====== DASHBOARD ======
+function renderDashboard() {
+  const totalActive = state.investments
+    .filter(i => getStatus(i) === 'active')
+    .reduce((sum, i) => sum + i.amount, 0);
+  
+  const totalMatured = state.investments
+    .filter(i => getStatus(i) === 'matured')
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  const totalInvestors = [...new Set(state.investments.map(i => i.investorName))].length;
+  
+  const totalInvested = state.investments.reduce((sum, i) => sum + i.amount, 0);
+
+  // Total returns (commissions earned by broker)
+  const totalCommission = state.returns
+    .filter(r => r.type === 'commission')
+    .reduce((sum, r) => sum + r.amount, 0);
+
+  // Total interest paid to clients
+  const totalInterestPaid = state.returns
+    .filter(r => r.type === 'interest_earned')
+    .reduce((sum, r) => sum + r.amount, 0);
+
+  const totalRedeemed = state.investments
+    .filter(i => i.status === 'redeemed')
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  document.getElementById('dashboardCards').innerHTML = `
+    <div class="dash-card accent">
+      <div class="label">📊 管理中的资金</div>
+      <div class="value">¥${fmt(totalActive)}</div>
+      <div class="sub">${state.investments.filter(i=>getStatus(i)==='active').length} 笔投资进行中</div>
+    </div>
+    <div class="dash-card green">
+      <div class="label">👥 投资人数量</div>
+      <div class="value">${totalInvestors}</div>
+      <div class="sub">共 ${state.investments.length} 笔投资记录</div>
+    </div>
+    <div class="dash-card orange">
+      <div class="label">💰 累计佣金收入</div>
+      <div class="value">¥${fmt(totalCommission)}</div>
+      <div class="sub">已付利息 ¥${fmt(totalInterestPaid)}</div>
+    </div>
+    <div class="dash-card purple">
+      <div class="label">📈 历史累计</div>
+      <div class="value">¥${fmt(totalInvested)}</div>
+      <div class="sub">已赎回 ¥${fmt(totalRedeemed)} · 管理中 ¥${fmt(totalActive)}</div>
+    </div>
+  `;
+  // Render forecast
+  renderForecast();
+}
+
+// ====== MONTHLY FORECAST CHART ======
+const INVESTOR_COLORS = [
+  '#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#dc2626',
+  '#0891b2', '#ca8a04', '#be185d', '#059669', '#4f46e5',
+  '#d97706', '#9333ea', '#0284c7', '#65a30d', '#db2777'
+];
+
+let chartDisplayYear = new Date().getFullYear();
+
+function renderForecast() {
+  renderYearTabs();
+  renderChart();
+}
+
+function renderYearTabs() {
+  const now = new Date();
+  const select = document.getElementById('chartYearSelect');
+  const currentVal = select.value || chartDisplayYear;
+  
+  // Generate years: from 5 years ago to 10 years ahead
+  const years = [];
+  for (let y = now.getFullYear() - 3; y <= now.getFullYear() + 10; y++) {
+    years.push(y);
+  }
+  
+  select.innerHTML = years.map(y =>
+    `<option value="${y}" ${y === chartDisplayYear ? 'selected' : ''}>${y}年</option>`
+  ).join('');
+}
+
+function switchChartYear(year) {
+  chartDisplayYear = year;
+  renderYearTabs();
+  renderChart();
+}
+
+function getInvestorColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return INVESTOR_COLORS[Math.abs(hash) % INVESTOR_COLORS.length];
+}
+
+function renderChart() {
+  const activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+  const year = chartDisplayYear;
+
+  // Build investor color map
+  const allNames = [...new Set(activeInvs.map(i => i.investorName))].sort();
+  const colorMap = {};
+  allNames.forEach((name, idx) => { colorMap[name] = INVESTOR_COLORS[idx % INVESTOR_COLORS.length]; });
+
+  // Group by month, then by investor
+  const months = {};
+  for (let m = 1; m <= 12; m++) {
+    const key = `${year}-${String(m).padStart(2,'0')}`;
+    months[key] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+  }
+
+  activeInvs.forEach(i => {
+    const d = new Date(i.maturityDate);
+    if (d.getFullYear() !== year) return;
+    const key = `${year}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!months[key]) months[key] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    const interest = calcInterest(i.amount, i.rate, termDays);
+    months[key].totalPrincipal += i.amount;
+    months[key].totalInterest += interest;
+    months[key].totalAmount += i.amount + interest;
+    if (!months[key].byInvestor[i.investorName]) months[key].byInvestor[i.investorName] = { principal: 0, interest: 0 };
+    months[key].byInvestor[i.investorName].principal += i.amount;
+    months[key].byInvestor[i.investorName].interest += interest;
+  });
+
+  const container = document.getElementById('forecastContainer');
+  const maxAmount = Math.max(...Object.values(months).map(m => m.totalAmount), 1);
+
+  const now = new Date();
+  const openedKey = sessionStorage.getItem('chartOpenMonth') || '';
+
+  // Y-axis: 5 tick labels
+  const yTicks = [];
+  const yStep = Math.max(1, Math.ceil(maxAmount / 4 / 10000) * 10000);
+  for (let i = 0; i <= 4; i++) {
+    const val = i * yStep;
+    yTicks.push({ val, label: `¥${fmt(val)}` });
+  }
+  const yMax = yTicks[yTicks.length - 1].val || 1;
+
+  // Build chart
+  let chartHTML = '<div class="vchart-wrap">';
+  
+  // Y-axis + bars container
+  chartHTML += '<div class="vchart-container" style="padding-left:72px;">';
+  
+  // Y-axis labels (absolute positioned)
+  chartHTML += '<div class="vchart-yaxis">';
+  yTicks.forEach((t, i) => {
+    const cls = i === 0 ? ' vchart-yaxis-zero' : '';
+    chartHTML += `<div class="vchart-ylabel${cls}"><span>${t.label}</span></div>`;
+  });
+  chartHTML += '</div>';
+
+  // Month columns
+  for (let m = 1; m <= 12; m++) {
+    const key = `${year}-${String(m).padStart(2,'0')}`;
+    const monthData = months[key] || { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    const monthDate = new Date(parseInt(year), m-1);
+    const isPast = monthDate < new Date(now.getFullYear(), now.getMonth());
+    const isThis = monthDate.getFullYear() === now.getFullYear() && monthDate.getMonth() === now.getMonth();
+    const isEmpty = monthData.totalAmount === 0;
+    
+    // Build segments by investor (sorted by principal descending)
+    const investors = Object.entries(monthData.byInvestor).sort((a,b) => b[1].principal - a[1].principal);
+    const barHeight = isEmpty ? 0 : Math.max(2, (monthData.totalAmount / yMax) * 100);
+    
+    const detailOpen = openedKey === key;
+
+    chartHTML += `<div class="vchart-col" style="opacity:${isPast ? 0.55 : 1};">`;
+    
+    if (isEmpty) {
+      chartHTML += `<div class="vchart-col-bars"><div class="vchart-col-empty" style="height:4px;"></div></div>`;
+    } else {
+      chartHTML += `<div class="vchart-col-bars">
+        <div class="vchart-col-bar" style="height:${barHeight}%;background:${investors[0] ? colorMap[investors[0][0]] : '#ccc'};${investors.length === 1 ? '' : 'background:linear-gradient(to bottom,' + investors.map(([n,d],i) => {
+          const pct = d.principal / monthData.totalPrincipal * 100;
+          return `${colorMap[n]} ${i===0 ? 0 : ''}${Math.round(pct)}%`;
+        }).join(',') + ')'};" onclick="toggleChartDetail('${key}')">
+          <span class="bar-total">¥${fmt(monthData.totalAmount)}</span>
+        </div>
+      </div>`;
+    }
+    
+    // Month label
+    chartHTML += `<div class="vchart-col-label ${isThis ? 'is-this' : ''} ${isPast && !isThis ? 'is-past' : ''}">
+      ${m}月${isThis ? ' ◀' : ''}
+    </div>`;
+    
+    // Amount below label
+    if (!isEmpty) {
+      chartHTML += `<div class="vchart-col-amount">¥${fmt(monthData.totalAmount)}</div>`;
+    }
+    
+    chartHTML += '</div>';
+  }
+
+  chartHTML += '</div>'; // vchart-container
+
+  // Detail panel (below the chart, shows clicked month)
+  chartHTML += '<div id="vchartDetail" class="vchart-detail-panel">';
+  chartHTML += '</div>';
+
+  // Legend
+  chartHTML += '<div class="vchart-legend">';
+  allNames.forEach(name => {
+    chartHTML += `
+      <div class="vchart-legend-item">
+        <span class="vchart-legend-dot" style="background:${colorMap[name]}"></span>
+        ${name}
+      </div>`;
+  });
+  chartHTML += '</div>';
+
+  chartHTML += '</div>'; // vchart-wrap
+
+  container.innerHTML = chartHTML;
+
+  // If we have an opened key, restore its detail
+  if (openedKey && months[openedKey] && months[openedKey].totalAmount > 0) {
+    showChartDetail(openedKey, months, colorMap, year);
+  }
+}
+
+function toggleChartDetail(key) {
+  const panel = document.getElementById('vchartDetail');
+  const isOpen = panel.classList.contains('open');
+  const currentKey = panel.dataset.key;
+
+  if (isOpen && currentKey === key) {
+    // Close
+    panel.classList.remove('open');
+    panel.innerHTML = '';
+    delete panel.dataset.key;
+    sessionStorage.removeItem('chartOpenMonth');
+    return;
+  }
+
+  // Rebuild data (need to recompute months)
+  const activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+  const year = chartDisplayYear;
+  const months = {};
+  for (let m = 1; m <= 12; m++) {
+    const k = `${year}-${String(m).padStart(2,'0')}`;
+    months[k] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+  }
+  const allNames = [...new Set(activeInvs.map(i => i.investorName))].sort();
+  const colorMap = {};
+  allNames.forEach((name, idx) => { colorMap[name] = INVESTOR_COLORS[idx % INVESTOR_COLORS.length]; });
+
+  activeInvs.forEach(i => {
+    const d = new Date(i.maturityDate);
+    if (d.getFullYear() !== year) return;
+    const k = `${year}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!months[k]) months[k] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    const interest = calcInterest(i.amount, i.rate, termDays);
+    months[k].totalPrincipal += i.amount;
+    months[k].totalInterest += interest;
+    months[k].totalAmount += i.amount + interest;
+    if (!months[k].byInvestor[i.investorName]) months[k].byInvestor[i.investorName] = { principal: 0, interest: 0 };
+    months[k].byInvestor[i.investorName].principal += i.amount;
+    months[k].byInvestor[i.investorName].interest += interest;
+  });
+
+  showChartDetail(key, months, colorMap, year);
+  panel.classList.add('open');
+  panel.dataset.key = key;
+  sessionStorage.setItem('chartOpenMonth', key);
+}
+
+function showChartDetail(key, months, colorMap, year) {
+  const monthData = months[key];
+  if (!monthData || monthData.totalAmount === 0) return;
+  
+  const m = parseInt(key.split('-')[1]);
+  const investors = Object.entries(monthData.byInvestor).sort((a,b) => b[1].principal - a[1].principal);
+  
+  const panel = document.getElementById('vchartDetail');
+  panel.innerHTML = `
+    <div class="vchart-detail-header">
+      ${year}年${m}月 · 本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)} 
+      = <span style="color:var(--green);font-size:15px;">¥${fmt(monthData.totalAmount)}</span>
+    </div>
+    ${investors.map(([name, data]) => `
+      <div class="vchart-detail-item">
+        <span><span class="vchart-detail-dot" style="background:${colorMap[name]}"></span>${name}</span>
+        <span style="font-weight:600;">本金 ¥${fmt(data.principal)} + 利息 ¥${fmt(data.interest)}</span>
+      </div>
+    `).join('')}
+    <div class="vchart-detail-total">
+      <span>合计</span>
+      <span style="color:var(--green);float:right;">本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)} = ¥${fmt(monthData.totalAmount)}</span>
+    </div>
+  `;
+}
+
+// ====== INVESTMENT LIST ======
+function renderList() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+
+  let filtered = [...state.investments];
+  if (search) filtered = filtered.filter(i => i.investorName.toLowerCase().includes(search));
+  if (statusFilter !== 'all') filtered = filtered.filter(i => getStatus(i) === statusFilter);
+
+  // Sort: active first, then by date desc
+  filtered.sort((a, b) => {
+    const sa = getStatus(a), sb = getStatus(b);
+    if (sa === 'active' && sb !== 'active') return -1;
+    if (sa !== 'active' && sb === 'active') return 1;
+    return b.investmentDate.localeCompare(a.investmentDate);
+  });
+
+  if (filtered.length === 0) {
+    document.getElementById('listTable').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>暂无投资记录</p>
+        <p style="font-size:13px;margin-top:8px;">点击"新增投资"添加第一笔</p>
+      </div>`;
+    return;
+  }
+
+  const table = `
+    <table>
+      <thead>
+        <tr>
+          <th>投资人</th>
+          <th>投资日期</th>
+          <th>金额</th>
+          <th>年利率</th>
+          <th>到期日</th>
+          <th>天数</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(i => {
+          const status = getStatus(i);
+          const days = daysBetween(i.investmentDate, today());
+          const expectInterest = calcInterest(i.amount, i.rate, Math.min(days, daysBetween(i.investmentDate, i.maturityDate)));
+          return `<tr>
+            <td><strong>${i.investorName}</strong></td>
+            <td>${fmtDate(i.investmentDate)}</td>
+            <td><strong>¥${fmt(i.amount)}</strong></td>
+            <td>${i.rate}%</td>
+            <td>${fmtDate(i.maturityDate)}</td>
+            <td>${days}天</td>
+            <td>${getStatusBadge(status)}</td>
+            <td class="actions-cell">
+              ${status === 'active' || status === 'matured' ? `
+                <button class="btn btn-sm btn-green" onclick="showReinvest(${i.id})">续投</button>
+                <button class="btn btn-sm btn-orange" onclick="showRedeem(${i.id})">赎回</button>` : ''}
+              <button class="btn btn-sm btn-outline" onclick="editInvestment(${i.id})">编辑</button>
+              <button class="btn btn-sm btn-red" onclick="deleteInvestment(${i.id})">删除</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  
+  document.getElementById('listTable').innerHTML = table;
+}
+
+// ====== BY INVESTOR ======
+function renderInvestors() {
+  const search = document.getElementById('investorSearch').value.trim().toLowerCase();
+  
+  // Group by investor
+  const groups = {};
+  state.investments.forEach(i => {
+    if (!groups[i.investorName]) groups[i.investorName] = [];
+    groups[i.investorName].push(i);
+  });
+
+  let names = Object.keys(groups).sort();
+  if (search) names = names.filter(n => n.toLowerCase().includes(search));
+
+  if (names.length === 0) {
+    document.getElementById('investorList').innerHTML = `
+      <div class="empty-state"><div class="icon">👥</div><p>暂无投资人数据</p></div>`;
+    return;
+  }
+
+  const html = names.map(name => {
+    const invs = groups[name];
+    const activeInvs = invs.filter(i => getStatus(i) === 'active');
+    const totalActive = activeInvs.reduce((s, i) => s + i.amount, 0);
+    const totalInvested = invs.reduce((s, i) => s + i.amount, 0);
+    const totalInterest = state.returns
+      .filter(r => {
+        const inv = state.investments.find(i => i.id === r.investId);
+        return inv && inv.investorName === name && r.type === 'interest_earned';
+      }).reduce((s, r) => s + r.amount, 0);
+    
+    // Expected annual return for active investments
+    const annualReturn = activeInvs.reduce((s, i) => s + calcInterest(i.amount, i.rate, 365), 0);
+
+    return `
+      <div class="investor-card">
+        <div class="investor-header">
+          <span class="investor-name">${name}</span>
+          <div class="investor-stats">
+            <span class="investor-stat">在投 <span class="num" style="color:var(--accent);">¥${fmt(totalActive)}</span></span>
+            <span class="investor-stat">累计投资 <span class="num">¥${fmt(totalInvested)}</span></span>
+            <span class="investor-stat">已获利息 <span class="num" style="color:var(--green);">¥${fmt(totalInterest)}</span></span>
+            <span class="investor-stat">年化收益 <span class="num" style="color:var(--orange);">≈ ¥${fmt(annualReturn)}</span></span>
+            <span class="investor-stat">笔数 <span class="num">${invs.length}</span></span>
+          </div>
+        </div>
+        <div class="sub-investments">
+          ${invs.sort((a,b) => b.investmentDate.localeCompare(a.investmentDate)).map(i => {
+            const status = getStatus(i);
+            const days = daysBetween(i.investmentDate, today());
+            return `<div class="sub-inv">
+              <span>¥${fmt(i.amount)} @ ${i.rate}% · ${fmtDate(i.investmentDate)} → ${fmtDate(i.maturityDate)} (${days}天)</span>
+              <span>${getStatusBadge(status)} ${getReinvestLabel(i.reinvestType)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('investorList').innerHTML = html;
+}
+
+// ====== RETURNS ======
+function renderReturns() {
+  const totalCommission = state.returns
+    .filter(r => r.type === 'commission')
+    .reduce((s, r) => s + r.amount, 0);
+  
+  const totalInterest = state.returns
+    .filter(r => r.type === 'interest_earned')
+    .reduce((s, r) => s + r.amount, 0);
+
+  // Pending interest (active investments' expected interest to date)
+  const pendingInterest = state.investments
+    .filter(i => getStatus(i) === 'active')
+    .reduce((s, i) => {
+      const days = daysBetween(i.investmentDate, today());
+      const termDays = daysBetween(i.investmentDate, i.maturityDate);
+      return s + calcInterest(i.amount, i.rate, Math.min(days, termDays));
+    }, 0) - state.returns.filter(r => r.type === 'interest_earned')
+      .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
+      .reduce((s, r) => s + r.amount, 0);
+
+  const totalVolume = state.investments
+    .filter(i => i.status === 'redeemed')
+    .reduce((s, i) => s + i.amount, 0) + 
+    state.investments.filter(i => getStatus(i) !== 'redeemed')
+      .reduce((s, i) => s + i.amount, 0);
+
+  document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
+  document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
+  document.getElementById('totalManagedVolume').textContent = '¥' + fmt(totalVolume);
+
+  // Returns table
+  const rets = [...state.returns].sort((a, b) => b.date.localeCompare(a.date));
+  
+  if (rets.length === 0) {
+    document.getElementById('returnsTable').innerHTML = `
+      <div class="empty-state"><div class="icon">📈</div><p>暂无收益记录。赎回投资时会自动产生收益记录。</p></div>`;
+    return;
+  }
+
+  document.getElementById('returnsTable').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>投资人</th>
+          <th>类型</th>
+          <th>金额</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rets.map(r => {
+          const inv = state.investments.find(i => i.id === r.investId);
+          const typeLabel = r.type === 'commission' ? '经纪人佣金' : '客户利息';
+          const typeBadge = r.type === 'commission' 
+            ? '<span class="badge badge-purple">佣金</span>' 
+            : '<span class="badge badge-green">利息</span>';
+          return `<tr>
+            <td>${fmtDate(r.date)}</td>
+            <td>${inv ? inv.investorName : '-'}</td>
+            <td>${typeBadge}</td>
+            <td><strong>¥${fmt(r.amount)}</strong></td>
+            <td style="color:var(--secondary);font-size:12px;">${r.note || '-'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ====== CRUD OPERATIONS ======
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Default: set investment date to today, maturity to 1 year later
+function setDefaultMaturity() {
+  const dateEl = document.getElementById('invDate');
+  const maturityEl = document.getElementById('invMaturity');
+  if (dateEl.value) {
+    const d = new Date(dateEl.value);
+    d.setFullYear(d.getFullYear() + 1);
+    maturityEl.value = d.toISOString().split('T')[0];
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('invDate').value = today();
+  setDefaultMaturity();
+});
+
+// When investment date changes, auto-update maturity
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'invDate') setDefaultMaturity();
+});
+
+function saveInvestment(e) {
+  e.preventDefault();
+  
+  const editId = document.getElementById('editId').value;
+  const data = {
+    investorName: document.getElementById('invName').value.trim(),
+    investmentDate: document.getElementById('invDate').value,
+    maturityDate: document.getElementById('invMaturity').value,
+    amount: parseFloat(document.getElementById('invAmount').value),
+    rate: parseFloat(document.getElementById('invRate').value),
+    reinvestType: 'none',
+    commission: parseFloat(document.getElementById('invCommission').value) || 0,
+    notes: document.getElementById('invNotes').value.trim()
+  };
+
+  // Validation
+  if (data.maturityDate <= data.investmentDate) {
+    alert('到期日必须晚于投资日期！');
+    return;
+  }
+
+  if (editId) {
+    // Edit existing
+    const idx = state.investments.findIndex(i => i.id === parseInt(editId));
+    if (idx >= 0) {
+      // Preserve status
+      const oldStatus = state.investments[idx].status;
+      state.investments[idx] = { ...state.investments[idx], ...data, status: oldStatus };
+    }
+  } else {
+    // New investment
+    const inv = {
+      id: state.nextId++,
+      ...data,
+      status: 'active',
+      createdAt: today()
+    };
+    state.investments.push(inv);
+  }
+
+  saveState();
+  closeModal('investmentModal');
+  resetForm();
+  renderAll();
+}
+
+function editInvestment(id) {
+  const inv = state.investments.find(i => i.id === id);
+  if (!inv) return;
+  if (inv.status === 'redeemed') {
+    alert('已赎回的投资不能编辑。如有需要可删除后重新添加。');
+    return;
+  }
+
+  document.getElementById('editId').value = id;
+  document.getElementById('invName').value = inv.investorName;
+  document.getElementById('invDate').value = inv.investmentDate;
+  document.getElementById('invMaturity').value = inv.maturityDate;
+  document.getElementById('invAmount').value = inv.amount;
+  document.getElementById('invRate').value = inv.rate;
+  document.getElementById('invCommission').value = inv.commission || 0;
+  document.getElementById('invNotes').value = inv.notes || '';
+  document.getElementById('modalTitle').textContent = '编辑投资记录';
+  showModal('investmentModal');
+}
+
+function deleteInvestment(id) {
+  const inv = state.investments.find(i => i.id === id);
+  if (!inv) return;
+  if (!confirm(`确定删除 "${inv.investorName}" 的 ¥${fmt(inv.amount)} 投资记录吗？\n此操作不可撤销。`)) return;
+  
+  state.investments = state.investments.filter(i => i.id !== id);
+  state.returns = state.returns.filter(r => r.investId !== id);
+  saveState();
+  renderAll();
+}
+
+function resetForm() {
+  document.getElementById('editId').value = '';
+  document.getElementById('invName').value = '';
+  document.getElementById('invDate').value = today();
+  document.getElementById('invMaturity').value = '';
+  document.getElementById('invAmount').value = '';
+  document.getElementById('invRate').value = '12';
+  document.getElementById('invCommission').value = '5';
+  document.getElementById('invNotes').value = '';
+  document.getElementById('modalTitle').textContent = '新增投资';
+}
+
+// ====== REDEEM ======
+let redeemingId = null;
+
+function showRedeem(id) {
+  const inv = state.investments.find(i => i.id === id);
+  if (!inv) return;
+  redeemingId = id;
+
+  const days = daysBetween(inv.investmentDate, inv.maturityDate);
+  const expectedInterest = calcInterest(inv.amount, inv.rate, days);
+  const expectedCommission = inv.commission ? calcInterest(inv.amount, inv.commission, days) : 0;
+
+  document.getElementById('redeemInfo').innerHTML = `
+    <p><strong>${inv.investorName}</strong> · ¥${fmt(inv.amount)} @ ${inv.rate}%</p>
+    <p style="font-size:13px;color:var(--secondary);margin-top:4px;">
+      投资期: ${fmtDate(inv.investmentDate)} → ${fmtDate(inv.maturityDate)} (${days}天)<br>
+      合同利息: ¥${fmt(expectedInterest)}<br>
+      佣金: ${inv.commission || 0}% → ¥${fmt(expectedCommission)}
+    </p>
+  `;
+  document.getElementById('redeemDate').value = today();
+  document.getElementById('redeemInterest').value = expectedInterest.toFixed(2);
+  document.getElementById('redeemCommission').value = expectedCommission.toFixed(2);
+  
+  showModal('redeemModal');
+}
+
+function confirmRedeem() {
+  if (!redeemingId) return;
+  const inv = state.investments.find(i => i.id === redeemingId);
+  if (!inv) return;
+
+  const redeemDate = document.getElementById('redeemDate').value;
+  const actualInterest = parseFloat(document.getElementById('redeemInterest').value) || 0;
+  const actualCommission = parseFloat(document.getElementById('redeemCommission').value) || 0;
+
+  if (!confirm(`确认赎回 "${inv.investorName}" 的 ¥${fmt(inv.amount)} 投资？`)) return;
+
+  // Mark as redeemed
+  inv.status = 'redeemed';
+  inv.redeemedDate = redeemDate;
+
+  // Record returns
+  if (actualInterest > 0) {
+    state.returns.push({
+      id: state.returns.length + 1,
+      investId: inv.id,
+      date: redeemDate,
+      type: 'interest_earned',
+      amount: actualInterest,
+      note: `${inv.investorName} · 到期利息 · #${inv.id}`
+    });
+  }
+
+  if (actualCommission > 0) {
+    state.returns.push({
+      id: state.returns.length + 1,
+      investId: inv.id,
+      date: redeemDate,
+      type: 'commission',
+      amount: actualCommission,
+      note: `${inv.investorName} · 经纪人佣金 · #${inv.id}`
+    });
+  }
+
+  saveState();
+  closeModal('redeemModal');
+  redeemingId = null;
+  renderAll();
+}
+
+// ====== REINVEST ======
+let reinvestingId = null;
+
+function showReinvest(id) {
+  const inv = state.investments.find(i => i.id === id);
+  if (!inv) return;
+  reinvestingId = id;
+
+  const days = daysBetween(inv.investmentDate, inv.maturityDate);
+  const expectedInterest = calcInterest(inv.amount, inv.rate, days);
+  const expectedCommission = inv.commission ? calcInterest(inv.amount, inv.commission, days) : 0;
+
+  document.getElementById('reinvestInfo').innerHTML = `
+    <p><strong>${inv.investorName}</strong> · 当前投资 ¥${fmt(inv.amount)} @ ${inv.rate}%</p>
+    <p style="font-size:12px;color:var(--secondary);margin-top:4px;">
+      原投资期: ${fmtDate(inv.investmentDate)} → ${fmtDate(inv.maturityDate)} (${days}天)<br>
+      到期利息: ¥${fmt(expectedInterest)} · 佣金: ¥${fmt(expectedCommission)}
+    </p>
+  `;
+  document.getElementById('reinvestId').value = id;
+  document.getElementById('reinvestStart').value = inv.maturityDate;
+  document.getElementById('reinvestEnd').value = '';
+  document.getElementById('reinvestRate').value = inv.rate;
+  document.getElementById('reinvestMethod').value = inv.reinvestType || 'all';
+  document.getElementById('reinvestInterest').value = expectedInterest.toFixed(2);
+  document.getElementById('reinvestCommission').value = expectedCommission.toFixed(2);
+  document.getElementById('reinvestNotes').value = '';
+  document.getElementById('partialAmountGroup').style.display = 'none';
+  
+  showModal('reinvestModal');
+}
+
+function confirmReinvest(e) {
+  e.preventDefault();
+  if (!reinvestingId) return;
+  
+  const oldInv = state.investments.find(i => i.id === reinvestingId);
+  if (!oldInv) return;
+
+  const startDate = document.getElementById('reinvestStart').value;
+  const endDate = document.getElementById('reinvestEnd').value;
+  const newRate = parseFloat(document.getElementById('reinvestRate').value);
+  const method = document.getElementById('reinvestMethod').value;
+  const notes = document.getElementById('reinvestNotes').value.trim();
+
+  if (endDate <= startDate) {
+    alert('续投到期日必须晚于开始日！');
+    return;
+  }
+
+  // Calculate the interest earned from original investment
+  const days = daysBetween(oldInv.investmentDate, oldInv.maturityDate);
+  const earnedInterest = calcInterest(oldInv.amount, oldInv.rate, days);
+  const earnedCommission = oldInv.commission ? calcInterest(oldInv.amount, oldInv.commission, days) : 0;
+
+  // Determine new investment amount
+  let newAmount;
+  switch(method) {
+    case 'all':
+      newAmount = oldInv.amount + earnedInterest;
+      break;
+    case 'interest':
+      newAmount = earnedInterest;
+      break;
+    case 'partial':
+      newAmount = parseFloat(document.getElementById('reinvestAmount').value) || 0;
+      if (newAmount <= 0 || newAmount > (oldInv.amount + earnedInterest)) {
+        alert(`续投金额必须在 0 到 ¥${fmt(oldInv.amount + earnedInterest)} 之间`);
+        return;
+      }
+      break;
+    default:
+      newAmount = oldInv.amount + earnedInterest;
+  }
+
+  // Mark old investment as redeemed
+  oldInv.status = 'redeemed';
+  oldInv.redeemedDate = startDate;
+
+  // Record interest earned
+  if (earnedInterest > 0) {
+    state.returns.push({
+      id: state.returns.length + 1,
+      investId: oldInv.id,
+      date: startDate,
+      type: 'interest_earned',
+      amount: earnedInterest,
+      note: `${oldInv.investorName} · 到期利息 → 续投 · #${oldInv.id}`
+    });
+  }
+
+  // Record commission
+  if (earnedCommission > 0) {
+    state.returns.push({
+      id: state.returns.length + 1,
+      investId: oldInv.id,
+      date: startDate,
+      type: 'commission',
+      amount: earnedCommission,
+      note: `${oldInv.investorName} · 经纪人佣金 · #${oldInv.id}`
+    });
+  }
+
+  // Create new reinvestment
+  const newInv = {
+    id: state.nextId++,
+    investorName: oldInv.investorName,
+    investmentDate: startDate,
+    maturityDate: endDate,
+    amount: Math.round(newAmount * 100) / 100,
+    rate: newRate,
+    reinvestType: method,
+    commission: oldInv.commission,
+    notes: `续投自 #${oldInv.id}${notes ? ' · ' + notes : ''}`,
+    status: 'active',
+    createdAt: today()
+  };
+  state.investments.push(newInv);
+
+  saveState();
+  closeModal('reinvestModal');
+  reinvestingId = null;
+  renderAll();
+  alert(`✅ 续投成功！\n${oldInv.investorName}\n原投资已赎回，新投资 ¥${fmt(newAmount)} @ ${newRate}%\n${fmtDate(startDate)} → ${fmtDate(endDate)}`);
+}
+
+// Show/hide partial amount field
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.id === 'reinvestMethod') {
+    document.getElementById('partialAmountGroup').style.display = 
+      e.target.value === 'partial' ? 'block' : 'none';
+  }
+});
+
+// ====== EXPORT / IMPORT (Excel) ======
+const EXCEL_FIELDS = [
+  { key: 'investorName', label: '投资人姓名', type: 's' },
+  { key: 'investmentDate', label: '投资日期', type: 'd' },
+  { key: 'maturityDate', label: '到期日', type: 'd' },
+  { key: 'amount', label: '投资金额', type: 'n' },
+  { key: 'rate', label: '年利率(%)', type: 'n' },
+  { key: 'reinvestType', label: '续投方式', type: 's', note: 'none=不续投 interest=利息续投 all=本息续投' },
+  { key: 'commission', label: '经纪人佣金(%)', type: 'n' },
+  { key: 'status', label: '状态', type: 's', note: 'active=投资中 matured=已到期 redeemed=已赎回' },
+  { key: 'redeemedDate', label: '赎回日期', type: 'd' },
+  { key: 'notes', label: '备注', type: 's' },
+];
+
+function exportData() {
+  try {
+    const wb = XLSX.utils.book_new();
+
+    // === Sheet 1: 投资记录 ===
+    const invData = state.investments.map(inv => ({
+      '投资人姓名': inv.investorName,
+      '投资日期': inv.investmentDate,
+      '到期日': inv.maturityDate,
+      '投资金额': inv.amount,
+      '年利率(%)': inv.rate,
+      '续投方式': inv.reinvestType || 'none',
+      '经纪人佣金(%)': inv.commission || 0,
+      '状态': inv.status || 'active',
+      '赎回日期': inv.redeemedDate || '',
+      '备注': inv.notes || '',
+      '(内部ID)': inv.id
+    }));
+    if (invData.length === 0) {
+      invData.push({
+        '投资人姓名': '', '投资日期': '', '到期日': '', '投资金额': '',
+        '年利率(%)': '', '续投方式': 'none', '经纪人佣金(%)': '',
+        '状态': 'active', '赎回日期': '', '备注': '', '(内部ID)': ''
+      });
+    }
+    const ws1 = XLSX.utils.json_to_sheet(invData);
+    // Column widths
+    ws1['!cols'] = [
+      { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+      { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 10 },
+      { wch: 12 }, { wch: 20 }, { wch: 10 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws1, '投资记录');
+
+    // === Sheet 2: 收益记录 ===
+    const retData = state.returns.length > 0
+      ? state.returns.map(r => ({
+          '日期': r.date,
+          '投资编号': r.investId,
+          '投资人': state.investments.find(i => i.id === r.investId)?.investorName || '',
+          '类型': r.type === 'commission' ? '经纪人佣金' : '客户利息',
+          '金额': r.amount,
+          '备注': r.note || ''
+        }))
+      : [{ '日期': '', '投资编号': '', '投资人': '', '类型': '', '金额': '', '备注': '' }];
+    const ws2 = XLSX.utils.json_to_sheet(retData);
+    ws2['!cols'] = [
+      { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 25 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws2, '收益记录');
+
+    // === Sheet 3: 字段说明 ===
+    const helpData = [
+      { '字段': '投资人姓名', '说明': '必填', '示例': '张三' },
+      { '字段': '投资日期', '说明': '格式 YYYY-MM-DD', '示例': '2026-01-15' },
+      { '字段': '到期日', '说明': '格式 YYYY-MM-DD', '示例': '2027-01-15' },
+      { '字段': '投资金额', '说明': '数字', '示例': '100000' },
+      { '字段': '年利率(%)', '说明': '数字，百分比数值', '示例': '12' },
+      { '字段': '续投方式', '说明': 'none / interest / all', '示例': 'none' },
+      { '字段': '经纪人佣金(%)', '说明': '数字，百分比数值', '示例': '5' },
+      { '字段': '状态', '说明': 'active / matured / redeemed', '示例': 'active' },
+      { '字段': '赎回日期', '说明': '格式 YYYY-MM-DD，空着则留白', '示例': '2027-01-15' },
+      { '字段': '备注', '说明': '文本，可选', '示例': '一年定期' },
+    ];
+    const ws3 = XLSX.utils.json_to_sheet(helpData);
+    ws3['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws3, '字段说明');
+
+    // Export
+    XLSX.writeFile(wb, `投资管理_${today()}.xlsx`);
+  } catch(e) {
+    alert('导出失败：' + e.message + '\n请检查网络连接（需要加载 SheetJS 库）');
+  }
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+
+      // Read Sheet 1: 投资记录
+      const ws1 = wb.Sheets['投资记录'];
+      if (!ws1) { alert('导入失败：找不到"投资记录"工作表'); return; }
+      const rows = XLSX.utils.sheet_to_json(ws1);
+
+      if (rows.length === 0) { alert('导入失败：工作表中没有数据'); return; }
+
+      // Check for header row with field names
+      const firstRow = rows[0];
+      const hasHeader = '投资人姓名' in firstRow || '投资日期' in firstRow;
+
+      const fieldMap = {
+        '投资人姓名': 'investorName',
+        '投资日期': 'investmentDate',
+        '到期日': 'maturityDate',
+        '投资金额': 'amount',
+        '年利率(%)': 'rate',
+        '续投方式': 'reinvestType',
+        '经纪人佣金(%)': 'commission',
+        '状态': 'status',
+        '赎回日期': 'redeemedDate',
+        '备注': 'notes',
+        '(内部ID)': 'id'
+      };
+
+      // Validate and import
+      const newInvestments = [];
+      let maxId = state.nextId;
+
+      rows.forEach((row, idx) => {
+        if (!hasHeader) return;
+        const inv = {};
+
+        // Map Chinese fields to internal keys
+        for (const [cnKey, enKey] of Object.entries(fieldMap)) {
+          let val = row[cnKey];
+          if (val === undefined || val === null || val === '') {
+            if (enKey === 'reinvestType') val = 'none';
+            else if (enKey === 'status') val = 'active';
+            else if (enKey === 'commission') val = 0;
+            else continue;
+          }
+
+          // Type conversions
+          if (enKey === 'amount' || enKey === 'rate' || enKey === 'commission') {
+            val = parseFloat(val) || 0;
+          }
+          if (enKey === 'id') {
+            val = parseInt(val) || maxId;
+            maxId = Math.max(maxId, val + 1);
+          }
+          if (enKey === 'investmentDate' || enKey === 'maturityDate' || enKey === 'redeemedDate') {
+            if (typeof val === 'number') {
+              // Excel date serial number
+              const d = new Date((val - 25569) * 86400 * 1000);
+              val = d.toISOString().split('T')[0];
+            } else {
+              val = String(val).trim();
+            }
+          }
+
+          inv[enKey] = val;
+        }
+
+        // Ensure required fields
+        if (!inv.investorName) {
+          alert(`第 ${idx+2} 行缺少投资人姓名，跳过`);
+          return;
+        }
+        if (!inv.investmentDate || !inv.maturityDate) {
+          alert(`第 ${idx+2} 行缺少投资日期或到期日，跳过`);
+          return;
+        }
+        if (!inv.amount || inv.amount <= 0) {
+          alert(`第 ${idx+2} 行投资金额无效，跳过`);
+          return;
+        }
+
+        // Fill defaults
+        if (!inv.id) inv.id = maxId++;
+        if (!inv.reinvestType) inv.reinvestType = 'none';
+        if (!inv.status) inv.status = 'active';
+        if (!inv.rate) inv.rate = 0;
+        if (!inv.commission) inv.commission = 0;
+
+        newInvestments.push(inv);
+      });
+
+      if (newInvestments.length === 0) {
+        alert('导入失败：未能读取到有效数据');
+        return;
+      }
+
+      // Confirm with user
+      const msg = `将从 Excel 导入 ${newInvestments.length} 条投资记录。\n当前系统已有 ${state.investments.length} 条记录。\n\n选择导入方式：`;
+      const mode = confirm(`${msg}\n确定=覆盖现有数据  取消=追加到现有数据`);
+      
+      if (mode) {
+        // Overwrite
+        state.investments = newInvestments;
+        state.returns = [];
+      } else {
+        // Append
+        state.investments = [...state.investments, ...newInvestments];
+      }
+      state.nextId = maxId;
+
+      saveState();
+      renderAll();
+      alert(`✅ 导入成功！\n共导入 ${newInvestments.length} 条投资记录`);
+    } catch(e) {
+      alert('导入失败：' + e.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+}
+
+// ====== TAB SWITCHING ======
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.toggle('active', tc.id === `tab-${tab}`));
+  
+  if (tab === 'list') renderList();
+  if (tab === 'investors') renderInvestors();
+  if (tab === 'returns') renderReturns();
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+
+// ====== RENDER ALL ======
+function renderAll() {
+  renderDashboard();
+  renderList();
+  renderInvestors();
+  renderReturns();
+}
+
+// ====== AUTH SYSTEM ======
+const AUTH_STORAGE_KEY = 'investAuth';
+const AUTH_USERS_KEY = 'investUsers';
+
+// Default users
+const DEFAULT_USERS = {
+  xiaoting: { password: '860601', role: 'broker', name: '晓婷' },
+  daishenglan: { password: 'initial', role: 'viewer', name: '戴胜兰', viewAll: true },
+  wangxi: { password: 'initial', role: 'investor', name: '王希' }
+};
+
+function getUsers() {
+  let saved = localStorage.getItem(AUTH_USERS_KEY);
+  if (saved) {
+    try { return { ...DEFAULT_USERS, ...JSON.parse(saved) }; }
+    catch(e) { return { ...DEFAULT_USERS }; }
+  }
+  return { ...DEFAULT_USERS };
+}
+
+function saveUsers(users) {
+  // Only save overridden passwords (don't save defaults that are unchanged)
+  const overrides = {};
+  for (const [u, data] of Object.entries(users)) {
+    if (DEFAULT_USERS[u] && DEFAULT_USERS[u].password !== data.password) {
+      overrides[u] = data;
+    } else if (!DEFAULT_USERS[u]) {
+      overrides[u] = data;
+    }
+  }
+  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(overrides));
+}
+
+let currentUser = null;
+let isReadOnly = false;
+
+function doLogin() {
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const password = document.getElementById('loginPass').value;
+  const users = getUsers();
+  const errorEl = document.getElementById('loginError');
+  
+  if (!users[username] || users[username].password !== password) {
+    errorEl.textContent = '用户名或密码错误';
+    errorEl.classList.add('show');
+    return;
+  }
+  
+  errorEl.classList.remove('show');
+  currentUser = { username, ...users[username] };
+  
+  // Save session
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+    username, time: Date.now()
+  }));
+  
+  // Apply role-based view
+  applyRoleView();
+}
+
+function applyRoleView() {
+  const overlay = document.getElementById('loginOverlay');
+  overlay.classList.add('hidden');
+  
+  // Show user badge
+  document.getElementById('userBadge').style.display = 'inline-flex';
+  document.getElementById('userNameDisplay').textContent = currentUser.name || currentUser.username;
+  
+  if (currentUser.role === 'broker') {
+    // Full system - show everything
+    isReadOnly = false;
+    document.querySelectorAll('.header-actions .btn-primary, .header-actions .btn-outline').forEach(b => b.style.display = '');
+    document.querySelector('.tabs').style.display = 'flex';
+    renderAll();
+  } else {
+    // Read-only view
+    isReadOnly = true;
+    
+    // Hide all edit buttons
+    document.querySelectorAll('.header-actions .btn-primary, .header-actions .btn-outline').forEach(b => b.style.display = 'none');
+    // Remove import input
+    const importInput = document.getElementById('importInput');
+    if (importInput) importInput.style.display = 'none';
+    
+    // If viewer can see all (daishenglan) - show Dashboard with all data
+    // If investor can only see self - filter data
+    document.querySelector('.tabs').style.display = 'flex';
+    renderDashboard();
+    renderForecast();
+    renderReadOnlyList();
+    renderInvestors();
+    renderReturns();
+    switchTab('list');
+  }
+}
+
+function renderReadOnlyList() {
+  // Filter investments for this user if not a viewer
+  let filtered = [...state.investments];
+  if (currentUser.role === 'investor' && !currentUser.viewAll) {
+    filtered = filtered.filter(i => i.investorName === currentUser.name);
+  }
+  
+  // Sort
+  filtered.sort((a, b) => {
+    const sa = getStatus(a), sb = getStatus(b);
+    if (sa === 'active' && sb !== 'active') return -1;
+    if (sa !== 'active' && sb === 'active') return 1;
+    return b.investmentDate.localeCompare(a.investmentDate);
+  });
+
+  if (filtered.length === 0) {
+    document.getElementById('listTable').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>暂无投资记录</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('listTable').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>投资人</th>
+          <th>投资日期</th>
+          <th>金额</th>
+          <th>年利率</th>
+          <th>到期日</th>
+          <th>天数</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(i => {
+          const status = getStatus(i);
+          const days = daysBetween(i.investmentDate, today());
+          return `<tr>
+            <td><strong>${i.investorName}</strong></td>
+            <td>${fmtDate(i.investmentDate)}</td>
+            <td><strong>¥${fmt(i.amount)}</strong></td>
+            <td>${i.rate}%</td>
+            <td>${fmtDate(i.maturityDate)}</td>
+            <td>${days}天</td>
+            <td>${getStatusBadge(status)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderInvestors() {
+  let groups = {};
+  let allInv = state.investments;
+  if (currentUser.role === 'investor' && !currentUser.viewAll) {
+    allInv = allInv.filter(i => i.investorName === currentUser.name);
+  }
+  allInv.forEach(i => {
+    if (!groups[i.investorName]) groups[i.investorName] = [];
+    groups[i.investorName].push(i);
+  });
+
+  let names = Object.keys(groups).sort();
+
+  if (names.length === 0) {
+    document.getElementById('investorList').innerHTML = `
+      <div class="empty-state"><div class="icon">👥</div><p>暂无投资人数据</p></div>`;
+    return;
+  }
+
+  const html = names.map(name => {
+    const invs = groups[name];
+    const activeInvs = invs.filter(i => getStatus(i) === 'active');
+    const totalActive = activeInvs.reduce((s, i) => s + i.amount, 0);
+    const totalInvested = invs.reduce((s, i) => s + i.amount, 0);
+    const totalInterest = state.returns
+      .filter(r => {
+        const inv = state.investments.find(i => i.id === r.investId);
+        return inv && inv.investorName === name && r.type === 'interest_earned';
+      }).reduce((s, r) => s + r.amount, 0);
+    const annualReturn = activeInvs.reduce((s, i) => s + calcInterest(i.amount, i.rate, 365), 0);
+
+    return `
+      <div class="investor-card">
+        <div class="investor-header">
+          <span class="investor-name">${name}</span>
+          <div class="investor-stats">
+            <span class="investor-stat">在投 <span class="num" style="color:var(--accent);">¥${fmt(totalActive)}</span></span>
+            <span class="investor-stat">累计投资 <span class="num">¥${fmt(totalInvested)}</span></span>
+            <span class="investor-stat">已获利息 <span class="num" style="color:var(--green);">¥${fmt(totalInterest)}</span></span>
+            <span class="investor-stat">年化收益 <span class="num" style="color:var(--orange);">≈ ¥${fmt(annualReturn)}</span></span>
+            <span class="investor-stat">笔数 <span class="num">${invs.length}</span></span>
+          </div>
+        </div>
+        <div class="sub-investments">
+          ${invs.sort((a,b) => b.investmentDate.localeCompare(a.investmentDate)).map(i => {
+            const status = getStatus(i);
+            const days = daysBetween(i.investmentDate, today());
+            return `<div class="sub-inv">
+              <span>¥${fmt(i.amount)} @ ${i.rate}% · ${fmtDate(i.investmentDate)} → ${fmtDate(i.maturityDate)} (${days}天)</span>
+              <span>${getStatusBadge(status)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('investorList').innerHTML = html;
+}
+
+function renderReturns() {
+  let relevantReturns = [...state.returns];
+  if (currentUser.role === 'investor' && !currentUser.viewAll) {
+    relevantReturns = relevantReturns.filter(r => {
+      const inv = state.investments.find(i => i.id === r.investId);
+      return inv && inv.investorName === currentUser.name;
+    });
+  }
+
+  const totalCommission = relevantReturns.filter(r => r.type === 'commission').reduce((s, r) => s + r.amount, 0);
+  const totalInterest = relevantReturns.filter(r => r.type === 'interest_earned').reduce((s, r) => s + r.amount, 0);
+
+  let activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+  if (currentUser.role === 'investor' && !currentUser.viewAll) {
+    activeInvs = activeInvs.filter(i => i.investorName === currentUser.name);
+  }
+  
+  const pendingInterest = activeInvs.reduce((s, i) => {
+    const days = daysBetween(i.investmentDate, today());
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    return s + calcInterest(i.amount, i.rate, Math.min(days, termDays));
+  }, 0) - relevantReturns.filter(r => r.type === 'interest_earned')
+    .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
+    .reduce((s, r) => s + r.amount, 0);
+
+  const totalVolume = state.investments.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
+    state.investments.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
+
+  document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
+  document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
+  document.getElementById('totalManagedVolume').textContent = '¥' + fmt(totalVolume);
+
+  const rets = relevantReturns.sort((a, b) => b.date.localeCompare(a.date));
+  if (rets.length === 0) {
+    document.getElementById('returnsTable').innerHTML = `
+      <div class="empty-state"><div class="icon">📈</div><p>暂无收益记录</p></div>`;
+    return;
+  }
+
+  document.getElementById('returnsTable').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>投资人</th>
+          <th>类型</th>
+          <th>金额</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rets.map(r => {
+          const inv = state.investments.find(i => i.id === r.investId);
+          const typeBadge = r.type === 'commission' 
+            ? '<span class="badge badge-purple">佣金</span>' 
+            : '<span class="badge badge-green">利息</span>';
+          return `<tr>
+            <td>${fmtDate(r.date)}</td>
+            <td>${inv ? inv.investorName : '-'}</td>
+            <td>${typeBadge}</td>
+            <td><strong>¥${fmt(r.amount)}</strong></td>
+            <td style="color:var(--secondary);font-size:12px;">${r.note || '-'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// Override showModal to prevent use in read-only mode
+const origShowModal = showModal;
+showModal = function(id) {
+  if (isReadOnly) { alert('只读模式，无法修改数据'); return; }
+  origShowModal(id);
+};
+
+// ====== USER MENU ======
+function showUserMenu() {
+  const choice = confirm(`${currentUser.name} (${currentUser.role === 'broker' ? '经纪人' : '投资人'})\n\n确认=登出   取消=修改密码`);
+  if (choice) {
+    doLogout();
+  } else {
+    showChangePw();
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  currentUser = null;
+  isReadOnly = false;
+  document.getElementById('userBadge').style.display = 'none';
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').classList.remove('show');
+}
+
+function showChangePw() {
+  const users = getUsers();
+  const uname = currentUser ? currentUser.username : '';
+  document.getElementById('cpUser').value = uname || '请先登录';
+  document.getElementById('cpOldPass').value = '';
+  document.getElementById('cpNewPass').value = '';
+  document.getElementById('cpConfirmPass').value = '';
+  document.getElementById('cpMsg').className = 'change-pw-msg';
+  document.getElementById('changePwOverlay').classList.add('show');
+  
+  if (!uname && !currentUser) {
+    // Coming from login page - allow any user to change password
+    document.getElementById('cpUser').removeAttribute('readonly');
+    document.getElementById('cpUser').value = '';
+    document.getElementById('cpUser').style.cssText = '';
+  } else {
+    document.getElementById('cpUser').setAttribute('readonly', 'readonly');
+    document.getElementById('cpUser').style.cssText = 'background:var(--bg);cursor:default;';
+  }
+}
+
+function hideChangePw() {
+  document.getElementById('changePwOverlay').classList.remove('show');
+}
+
+function doChangePw() {
+  const username = document.getElementById('cpUser').value.trim().toLowerCase();
+  const oldPass = document.getElementById('cpOldPass').value;
+  const newPass = document.getElementById('cpNewPass').value;
+  const confirmPass = document.getElementById('cpConfirmPass').value;
+  const msgEl = document.getElementById('cpMsg');
+  
+  if (!username) {
+    msgEl.textContent = '请输入用户名';
+    msgEl.className = 'change-pw-msg error';
+    return;
+  }
+  
+  const users = getUsers();
+  if (!users[username]) {
+    msgEl.textContent = '用户不存在';
+    msgEl.className = 'change-pw-msg error';
+    return;
+  }
+  
+  if (users[username].password !== oldPass) {
+    msgEl.textContent = '当前密码错误';
+    msgEl.className = 'change-pw-msg error';
+    return;
+  }
+  
+  if (newPass.length < 6) {
+    msgEl.textContent = '新密码至少6位';
+    msgEl.className = 'change-pw-msg error';
+    return;
+  }
+  
+  if (newPass !== confirmPass) {
+    msgEl.textContent = '两次密码输入不一致';
+    msgEl.className = 'change-pw-msg error';
+    return;
+  }
+  
+  // Update password
+  users[username].password = newPass;
+  saveUsers(users);
+  
+  msgEl.textContent = '✅ 密码修改成功！';
+  msgEl.className = 'change-pw-msg success';
+  
+  document.getElementById('cpOldPass').value = '';
+  document.getElementById('cpNewPass').value = '';
+  document.getElementById('cpConfirmPass').value = '';
+  
+  setTimeout(hideChangePw, 1500);
+}
+
+// ====== OVERRIDES for read-only mode ======
+// Override renderList() for read-only mode
+const origRenderList = renderList;
+renderList = function() {
+  if (isReadOnly) { renderReadOnlyList(); return; }
+  origRenderList();
+};
+
+// Override renderInvestors for read-only mode
+const origRenderInvestors = renderInvestors;
+renderInvestors = function() {
+  if (isReadOnly) {
+    // Use the filtered version
+    let groups = {};
+    let allInv = state.investments;
+    if (currentUser.role === 'investor' && !currentUser.viewAll) {
+      allInv = allInv.filter(i => i.investorName === currentUser.name);
+    }
+    allInv.forEach(i => {
+      if (!groups[i.investorName]) groups[i.investorName] = [];
+      groups[i.investorName].push(i);
+    });
+    let names = Object.keys(groups).sort();
+    if (names.length === 0) {
+      document.getElementById('investorList').innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无投资人数据</p></div>';
+      return;
+    }
+    const html = names.map(name => {
+      const invs = groups[name];
+      const activeInvs = invs.filter(i => getStatus(i) === 'active');
+      const totalActive = activeInvs.reduce((s, i) => s + i.amount, 0);
+      const totalInvested = invs.reduce((s, i) => s + i.amount, 0);
+      const totalInterest = state.returns.filter(r => {
+        const inv = state.investments.find(i => i.id === r.investId);
+        return inv && inv.investorName === name && r.type === 'interest_earned';
+      }).reduce((s, r) => s + r.amount, 0);
+      const annualReturn = activeInvs.reduce((s, i) => s + calcInterest(i.amount, i.rate, 365), 0);
+      return `<div class="investor-card">
+        <div class="investor-header">
+          <span class="investor-name">${name}</span>
+          <div class="investor-stats">
+            <span>在投 <span class="num" style="color:var(--accent);">¥${fmt(totalActive)}</span></span>
+            <span>累计 <span class="num">¥${fmt(totalInvested)}</span></span>
+            <span>已获利息 <span class="num" style="color:var(--green);">¥${fmt(totalInterest)}</span></span>
+          </div>
+        </div>
+        <div class="sub-investments">
+          ${invs.sort((a,b) => b.investmentDate.localeCompare(a.investmentDate)).map(i => {
+            const status = getStatus(i);
+            return `<div class="sub-inv">
+              <span>¥${fmt(i.amount)} @ ${i.rate}% · ${fmtDate(i.investmentDate)} → ${fmtDate(i.maturityDate)}</span>
+              <span>${getStatusBadge(status)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('investorList').innerHTML = html;
+    return;
+  }
+  origRenderInvestors();
+};
+
+// Override renderReturns for read-only mode
+const origRenderReturns = renderReturns;
+renderReturns = function() {
+  if (isReadOnly) {
+    let relevantReturns = [...state.returns];
+    if (currentUser.role === 'investor' && !currentUser.viewAll) {
+      relevantReturns = relevantReturns.filter(r => {
+        const inv = state.investments.find(i => i.id === r.investId);
+        return inv && inv.investorName === currentUser.name;
+      });
+    }
+    const totalCommission = relevantReturns.filter(r => r.type === 'commission').reduce((s, r) => s + r.amount, 0);
+    const totalInterest = relevantReturns.filter(r => r.type === 'interest_earned').reduce((s, r) => s + r.amount, 0);
+    let activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+    if (currentUser.role === 'investor' && !currentUser.viewAll) {
+      activeInvs = activeInvs.filter(i => i.investorName === currentUser.name);
+    }
+    const pendingInterest = activeInvs.reduce((s, i) => {
+      const days = daysBetween(i.investmentDate, today());
+      const termDays = daysBetween(i.investmentDate, i.maturityDate);
+      return s + calcInterest(i.amount, i.rate, Math.min(days, termDays));
+    }, 0) - relevantReturns.filter(r => r.type === 'interest_earned')
+      .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
+      .reduce((s, r) => s + r.amount, 0);
+    const totalVolume = state.investments.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
+      state.investments.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
+    document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
+    document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
+    document.getElementById('totalManagedVolume').textContent = '¥' + fmt(totalVolume);
+    const rets = relevantReturns.sort((a, b) => b.date.localeCompare(a.date));
+    if (rets.length === 0) {
+      document.getElementById('returnsTable').innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>暂无收益记录</p></div>';
+      return;
+    }
+    document.getElementById('returnsTable').innerHTML = `<table><thead><tr><th>日期</th><th>投资人</th><th>类型</th><th>金额</th><th>备注</th></tr></thead><tbody>
+      ${rets.map(r => {
+        const inv = state.investments.find(i => i.id === r.investId);
+        const typeBadge = r.type === 'commission' ? '<span class="badge badge-purple">佣金</span>' : '<span class="badge badge-green">利息</span>';
+        return `<tr><td>${fmtDate(r.date)}</td><td>${inv ? inv.investorName : '-'}</td><td>${typeBadge}</td><td><strong>¥${fmt(r.amount)}</strong></td><td style="color:var(--secondary);font-size:12px;">${r.note || '-'}</td></tr>`;
+      }).join('')}</tbody></table>`;
+    return;
+  }
+  origRenderReturns();
+};
+
+// ====== INIT AUTH ======
+// Check for existing session
+(function() {
+  const session = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (session) {
+    try {
+      const data = JSON.parse(session);
+      const users = getUsers();
+      if (users[data.username]) {
+        currentUser = { username: data.username, ...users[data.username] };
+        // Defer to after DOM is ready
+        setTimeout(applyRoleView, 100);
+        return;
+      }
+    } catch(e) {}
+  }
+  // Show login overlay
+  setTimeout(() => {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+  }, 50);
+})();
+
+// Override renderAll to check read-only
+const origRenderAll = renderAll;
+renderAll = function() {
+  if (isReadOnly) {
+    renderDashboard();
+    renderForecast();
+    renderReadOnlyList();
+    renderInvestors();
+    renderReturns();
+    return;
+  }
+  origRenderAll();
+};
+</script>
+</body>
+</html>
