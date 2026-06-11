@@ -1909,7 +1909,11 @@ function applyRoleView() {
     // Read-only view
     isReadOnly = true;
     
-    // Hide all edit buttons
+    // Hide loading
+    document.getElementById('dataLoading').style.display = 'none';
+    
+    // Load data from API
+    loadAllData();
     document.querySelectorAll('.header-actions .btn-primary, .header-actions .btn-outline').forEach(b => b.style.display = 'none');
     // Remove import input
     const importInput = document.getElementById('importInput');
