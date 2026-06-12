@@ -296,7 +296,36 @@
     .change-pw-msg.success { color: var(--green); display: block; }
     .change-pw-msg.error { color: var(--red); display: block; }
 
-    /* User badge in header */
+    /* User menu dropdown */
+.user-menu-overlay {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0,0,0,0.3); display: none;
+  align-items: center; justify-content: center;
+}
+.user-menu-overlay.show { display: flex; }
+.user-menu-box {
+  background: var(--card); border-radius: var(--radius);
+  padding: 20px; width: 280px; max-width: 90vw;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+.user-menu-box .user-info {
+  text-align: center; margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: var(--border);
+}
+.user-menu-box .user-info .name { font-size: 16px; font-weight: 700; }
+.user-menu-box .user-info .role { font-size: 12px; color: var(--secondary); margin-top: 2px; }
+.user-menu-box .menu-btn {
+  display: block; width: 100%; padding: 10px 14px;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  text-align: left; transition: background 0.15s;
+  margin-bottom: 4px;
+}
+.user-menu-box .menu-btn:hover { background: var(--bg); }
+.user-menu-box .menu-btn.logout { color: var(--red); }
+.user-menu-box .menu-btn.close-btn {
+  text-align: center; color: var(--secondary); margin-top: 8px;
+}
     .user-badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 12px 4px 8px; border-radius: 9999px;
@@ -463,6 +492,19 @@
   <div style="text-align:center;">
     <div style="width:40px;height:40px;margin:0 auto 16px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
     <p style="color:var(--secondary);font-size:14px;">加载数据中...</p>
+  </div>
+</div>
+
+<!-- User Menu -->
+<div class="user-menu-overlay" id="userMenuOverlay" onclick="if(event.target===this)hideUserMenu()">
+  <div class="user-menu-box">
+    <div class="user-info">
+      <div class="name" id="menuUserName"></div>
+      <div class="role" id="menuUserRole"></div>
+    </div>
+    <button class="menu-btn" onclick="hideUserMenu();showChangePw()">🔑 修改密码</button>
+    <button class="menu-btn logout" onclick="hideUserMenu();doLogout()">🚪 退出登录</button>
+    <button class="menu-btn close-btn" onclick="hideUserMenu()">取消</button>
   </div>
 </div>
 
@@ -2083,12 +2125,12 @@ showModal = function(id) {
 
 // ====== USER MENU ======
 function showUserMenu() {
-  const choice = confirm(`${currentUser.name} (${currentUser.role === 'broker' ? '经纪人' : '投资人'})\n\n确认=登出   取消=修改密码`);
-  if (choice) {
-    doLogout();
-  } else {
-    showChangePw();
-  }
+  document.getElementById('menuUserName').textContent = currentUser.name || currentUser.username;
+  document.getElementById('menuUserRole').textContent = currentUser.role === 'broker' ? '经纪人' : '投资人';
+  document.getElementById('userMenuOverlay').classList.add('show');
+}
+function hideUserMenu() {
+  document.getElementById('userMenuOverlay').classList.remove('show');
 }
 
 function doLogout() {
