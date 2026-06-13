@@ -2327,15 +2327,15 @@ function renderReturns() {
   let activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   
   // Role-based pending: investor=interest, broker=commission, admin/viewer=both
-  // Future interest/commission from today to maturity (NOT accrued to date)
+  // Future from today to maturity (proportional to remaining time)
   const pendingInterest = activeInvs.reduce((s, i) => {
-    const days = daysBetween(today(), i.maturityDate);
-    return days > 0 ? s + calcInterest(i.amount, i.rate, days) : s;
+    const remaining = daysBetween(today(), i.maturityDate);
+    return remaining > 0 ? s + calcInterest(i.amount, i.rate, remaining) : s;
   }, 0);
 
   const pendingCommission = activeInvs.reduce((s, i) => {
-    const days = daysBetween(today(), i.maturityDate);
-    return days > 0 ? s + calcInterest(i.amount, i.commission || 0, days) : s;
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    return s + calcInterest(i.amount, i.commission || 0, termDays);
   }, 0);
 
   let pendingLabel = '待收收益（未到期）';
