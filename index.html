@@ -2497,51 +2497,6 @@ renderInvestors = function() {
   origRenderInvestors();
 };
 
-// Override renderReturns for read-only mode
-const origRenderReturns = renderReturns;
-renderReturns = function() {
-  if (isReadOnly) {
-    let relevantReturns = [...state.returns];
-    if (currentUser.role === 'investor' && !currentUser.viewAll) {
-      relevantReturns = relevantReturns.filter(r => {
-        const inv = state.investments.find(i => i.id === r.investId);
-        return inv && inv.investorName === currentUser.name;
-      });
-    }
-    const totalCommission = relevantReturns.filter(r => r.type === 'commission').reduce((s, r) => s + r.amount, 0);
-    const totalInterest = relevantReturns.filter(r => r.type === 'interest_earned').reduce((s, r) => s + r.amount, 0);
-    let activeInvs = state.investments.filter(i => getStatus(i) === 'active');
-    if (currentUser.role === 'investor' && !currentUser.viewAll) {
-      activeInvs = activeInvs.filter(i => i.investorName === currentUser.name);
-    }
-    const pendingInterest = activeInvs.reduce((s, i) => {
-      const days = daysBetween(i.investmentDate, today());
-      const termDays = daysBetween(i.investmentDate, i.maturityDate);
-      return s + calcInterest(i.amount, i.rate, Math.min(days, termDays));
-    }, 0) - relevantReturns.filter(r => r.type === 'interest_earned')
-      .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
-      .reduce((s, r) => s + r.amount, 0);
-    const totalVolume = state.investments.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
-      state.investments.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
-    document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
-    document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
-    document.getElementById('totalManagedVolume').textContent = '¥' + fmt(totalVolume);
-    const rets = relevantReturns.sort((a, b) => b.date.localeCompare(a.date));
-    if (rets.length === 0) {
-      document.getElementById('returnsTable').innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>暂无收益记录</p></div>';
-      return;
-    }
-    document.getElementById('returnsTable').innerHTML = `<table><thead><tr><th>日期</th><th>投资人</th><th>类型</th><th>金额</th><th>备注</th></tr></thead><tbody>
-      ${rets.map(r => {
-        const inv = state.investments.find(i => i.id === r.investId);
-        const typeBadge = r.type === 'commission' ? '<span class="badge badge-purple">佣金</span>' : '<span class="badge badge-green">利息</span>';
-        return `<tr><td>${fmtDate(r.date)}</td><td>${inv ? inv.investorName : '-'}</td><td>${typeBadge}</td><td><strong>¥${fmt(r.amount)}</strong></td><td style="color:var(--secondary);font-size:12px;">${r.note || '-'}</td></tr>`;
-      }).join('')}</tbody></table>`;
-    return;
-  }
-  origRenderReturns();
-};
-
 // ====== INIT ======
 (function() {
   const savedUser = localStorage.getItem('authUser');
