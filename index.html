@@ -1161,7 +1161,12 @@ function getInvestorColor(name) {
 }
 
 function renderChart() {
-  const activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+  // Filter for investors: only show their own data
+  let myInvs = state.investments;
+  if (isReadOnly && currentUser.role === 'investor' && !currentUser.viewAll) {
+    myInvs = myInvs.filter(i => i.investorName === currentUser.name);
+  }
+  const activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   const year = chartDisplayYear;
 
   // Build investor color map
@@ -2289,8 +2294,8 @@ function renderReturns() {
     .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
     .reduce((s, r) => s + r.amount, 0);
 
-  const totalVolume = state.investments.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
-    state.investments.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
+  const totalVolume = activeInvs.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
+    activeInvs.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
 
   document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
   document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
