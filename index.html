@@ -2645,7 +2645,7 @@ async function adminAddUser() {
   status.style.color = 'var(--secondary)';
   const res = await api('POST', '/api/admin/users', { name, role, viewAll });
   if (res.ok) {
-    status.innerHTML = `✅ 已添加: <code>${res.user.username}</code> (密码: <code>Initial</code>)`;
+    status.innerHTML = `✅ 已添加: <code>${res.user.username}</code> (密码: <code>initial</code>)`;
     status.style.color = 'var(--green)';
     document.getElementById('newUserName').value = '';
     adminLoadUsers();
