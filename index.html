@@ -450,8 +450,125 @@
     }
 
     @media (max-width: 700px) {
-      .form-row { grid-template-columns: 1fr; }
-      .dash-grid { grid-template-columns: 1fr 1fr; }
+        .form-row { grid-template-columns: 1fr; }
+        .dash-grid { grid-template-columns: 1fr 1fr; }
+        .investor-stats { flex-direction: column; gap: 4px; }
+        .vchart-container { padding-left: 48px; min-height: 200px; }
+        .vchart-yaxis { width: 44px; }
+    }
+
+    /* ===== Mobile Responsive (added) ===== */
+    @media (max-width: 768px) {
+      body { padding: 0; }
+      .container { padding: 0 12px; }
+
+      /* Header */
+      header { padding: 10px 0; }
+      header .container { flex-wrap: nowrap; gap: 6px; }
+      .logo { font-size: 15px; }
+      .logo-icon { width: 28px; height: 28px; font-size: 13px; }
+      .btn { padding: 6px 10px; font-size: 11px; }
+      .header-actions .btn span { display: none; }
+
+      /* Login overlay */
+      .login-box { width: 92%; max-width: 360px; padding: 24px 20px; }
+
+      /* Dashboard cards */
+      .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .dash-card { padding: 12px; }
+      .dash-card .value { font-size: 20px; }
+
+      /* Tabs - scrollable */
+      .tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { padding: 8px 6px; font-size: 11px; white-space: nowrap; min-width: 60px; }
+      .tab:first-child { padding-left: 8px; }
+
+      /* Tables → cards on mobile */
+      .table-wrap { overflow-x: auto; }
+      .table-wrap table { font-size: 11px; }
+      .table-wrap th, .table-wrap td { padding: 6px 4px; white-space: nowrap; }
+
+      /* Search bars */
+      .search-bar input { font-size: 12px; padding: 8px !important; }
+
+      /* Stat cards in returns */
+      #tab-returns .dash-grid { grid-template-columns: 1fr 1fr 1fr; }
+      #tab-returns .dash-card { padding: 10px; }
+      #tab-returns .dash-card .value { font-size: 14px; }
+
+      /* Investor cards */
+      .investor-card { padding: 12px; }
+      .investor-stats { gap: 8px; font-size: 11px; }
+
+      /* Modals - full screen on mobile */
+      .modal-content {
+        width: 94%;
+        max-width: 400px;
+        max-height: 90vh;
+        padding: 16px;
+        margin: 0 auto;
+      }
+      .modal-content .form-row { grid-template-columns: 1fr; }
+      .modal-content input[type="text"],
+      .modal-content input[type="number"],
+      .modal-content input[type="date"],
+      .modal-content select {
+        font-size: 16px !important; /* Prevent iOS zoom */
+        padding: 10px !important;
+      }
+
+      /* Form groups */
+      .form-row { grid-template-columns: 1fr; gap: 8px; }
+      .form-group label { font-size: 11px; }
+      .form-group input, .form-group select { font-size: 14px; padding: 8px; }
+
+      /* User menu */
+      .user-menu-box { width: 92%; max-width: 340px; padding: 20px; }
+
+      /* Section titles */
+      .section-title { font-size: 14px; margin: 12px 0 8px; }
+
+      /* Action buttons in tables */
+      .actions-cell .btn-sm { padding: 4px 8px; font-size: 10px; }
+
+      /* Monthly chart */
+      .chart-container { height: 200px; }
+
+      /* Dashboard forecast */
+      .forecast-grid { grid-template-columns: 1fr; }
+
+      /* Year tabs */
+      #yearTabs { gap: 2px; }
+      #yearTabs .year-tab { padding: 4px 8px; font-size: 10px; }
+
+      /* Empty states */
+      .empty-state { padding: 20px 10px; }
+      .empty-state .icon { font-size: 32px; }
+
+      /* Badges */
+      .badge { font-size: 8px; padding: 1px 5px; }
+
+      /* Fix filter select */
+      #statusFilter { font-size: 11px; padding: 6px !important; }
+
+      /* Admin section */
+      #tab-admin .table-wrap td,
+      #tab-admin .table-wrap th { font-size: 10px; padding: 4px 3px; }
+      #tab-admin .table-wrap code { font-size: 9px; }
+    }
+
+    /* Very small screens */
+    @media (max-width: 420px) {
+      .dash-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .dash-card { padding: 8px; }
+      .dash-card .value { font-size: 17px; }
+      .dash-card .label { font-size: 10px; }
+      .list-item { padding: 8px 10px; }
+      .list-name { font-size: 12px; }
+      .list-amount { font-size: 12px; }
+
+      #tab-returns .dash-grid { grid-template-columns: 1fr; }
+    }
       .investor-stats { flex-direction: column; gap: 4px; }
       .vchart-container { padding-left: 48px; min-height: 200px; }
       .vchart-yaxis { width: 44px; }
