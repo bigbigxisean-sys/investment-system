@@ -2082,6 +2082,17 @@ function importData(e) {
       if (hadError || items.length === 0) { if (!hadError) alert('无有效数据'); return; }
       if (!confirm(`将从Excel导入${items.length}条到云端数据库，确定吗？`)) return;
 
+      // Auto-create user accounts for new investors (admin only)
+      const investorNames = [...new Set(items.map(i => i.investorName))];
+      let createdUsers = 0;
+      if (currentUser && currentUser.role === 'admin') {
+        for (const name of investorNames) {
+          const u = await api('POST', '/api/admin/users', { name, role: 'investor', viewAll: false });
+          if (u.ok) { createdUsers++; }
+        }
+      }
+      if (createdUsers > 0) alert(`已自动创建 ${createdUsers} 个投资人账号（密码: Initial）`);
+
       let ok = 0, fail = 0;
       for (let i = 0; i < items.length; i++) {
         const d = items[i];
@@ -2645,7 +2656,7 @@ async function adminAddUser() {
   status.style.color = 'var(--secondary)';
   const res = await api('POST', '/api/admin/users', { name, role, viewAll });
   if (res.ok) {
-    status.innerHTML = `✅ 已添加: <code>${res.user.username}</code> (密码: <code>initial</code>)`;
+    status.innerHTML = `✅ 已添加: <code>${res.user.username}</code> (密码: <code>Initial</code>)`;
     status.style.color = 'var(--green)';
     document.getElementById('newUserName').value = '';
     adminLoadUsers();
