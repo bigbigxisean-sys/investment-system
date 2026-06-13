@@ -1168,6 +1168,7 @@ function renderChart() {
   }
   const activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   const year = chartDisplayYear;
+  const showCommission = currentUser.role === 'broker' || currentUser.role === 'admin' || currentUser.role === 'viewer';
 
   // Build investor color map
   const allNames = [...new Set(activeInvs.map(i => i.investorName))].sort();
@@ -1185,15 +1186,18 @@ function renderChart() {
     const d = new Date(i.maturityDate);
     if (d.getFullYear() !== year) return;
     const key = `${year}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!months[key]) months[key] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    if (!months[key]) months[key] = { totalPrincipal: 0, totalInterest: 0, totalCommission: 0, totalAmount: 0, byInvestor: {} };
     const termDays = daysBetween(i.investmentDate, i.maturityDate);
     const interest = calcInterest(i.amount, i.rate, termDays);
+    const commission = calcInterest(i.amount, i.commission || 0, termDays);
     months[key].totalPrincipal += i.amount;
     months[key].totalInterest += interest;
-    months[key].totalAmount += i.amount + interest;
-    if (!months[key].byInvestor[i.investorName]) months[key].byInvestor[i.investorName] = { principal: 0, interest: 0 };
+    months[key].totalCommission += commission;
+    months[key].totalAmount += i.amount + interest + (showCommission ? commission : 0);
+    if (!months[key].byInvestor[i.investorName]) months[key].byInvestor[i.investorName] = { principal: 0, interest: 0, commission: 0 };
     months[key].byInvestor[i.investorName].principal += i.amount;
     months[key].byInvestor[i.investorName].interest += interest;
+    months[key].byInvestor[i.investorName].commission += commission;
   });
 
   const container = document.getElementById('forecastContainer');
@@ -1315,10 +1319,11 @@ function toggleChartDetail(key) {
     }
     const activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   const year = chartDisplayYear;
+  const showComm = currentUser.role === 'broker' || currentUser.role === 'admin' || currentUser.role === 'viewer';
   const months = {};
   for (let m = 1; m <= 12; m++) {
     const k = `${year}-${String(m).padStart(2,'0')}`;
-    months[k] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    months[k] = { totalPrincipal: 0, totalInterest: 0, totalCommission: 0, totalAmount: 0, byInvestor: {} };
   }
   const allNames = [...new Set(activeInvs.map(i => i.investorName))].sort();
   const colorMap = {};
@@ -1328,15 +1333,18 @@ function toggleChartDetail(key) {
     const d = new Date(i.maturityDate);
     if (d.getFullYear() !== year) return;
     const k = `${year}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!months[k]) months[k] = { totalPrincipal: 0, totalInterest: 0, totalAmount: 0, byInvestor: {} };
+    if (!months[k]) months[k] = { totalPrincipal: 0, totalInterest: 0, totalCommission: 0, totalAmount: 0, byInvestor: {} };
     const termDays = daysBetween(i.investmentDate, i.maturityDate);
     const interest = calcInterest(i.amount, i.rate, termDays);
+    const commission = calcInterest(i.amount, i.commission || 0, termDays);
     months[k].totalPrincipal += i.amount;
     months[k].totalInterest += interest;
-    months[k].totalAmount += i.amount + interest;
-    if (!months[k].byInvestor[i.investorName]) months[k].byInvestor[i.investorName] = { principal: 0, interest: 0 };
+    months[k].totalCommission += commission;
+    months[k].totalAmount += i.amount + interest + (showComm ? commission : 0);
+    if (!months[k].byInvestor[i.investorName]) months[k].byInvestor[i.investorName] = { principal: 0, interest: 0, commission: 0 };
     months[k].byInvestor[i.investorName].principal += i.amount;
     months[k].byInvestor[i.investorName].interest += interest;
+    months[k].byInvestor[i.investorName].commission += commission;
   });
 
   showChartDetail(key, months, colorMap, year);
@@ -1353,20 +1361,21 @@ function showChartDetail(key, months, colorMap, year) {
   const investors = Object.entries(monthData.byInvestor).sort((a,b) => b[1].principal - a[1].principal);
   
   const panel = document.getElementById('vchartDetail');
+  const showComm = currentUser.role === 'broker' || currentUser.role === 'admin' || currentUser.role === 'viewer';
   panel.innerHTML = `
     <div class="vchart-detail-header">
-      ${year}年${m}月 · 本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)} 
+      ${year}年${m}月 · 本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)}${showComm ? ` + 佣金 ¥${fmt(monthData.totalCommission)}` : ''}
       = <span style="color:var(--green);font-size:15px;">¥${fmt(monthData.totalAmount)}</span>
     </div>
     ${investors.map(([name, data]) => `
       <div class="vchart-detail-item">
         <span><span class="vchart-detail-dot" style="background:${colorMap[name]}"></span>${name}</span>
-        <span style="font-weight:600;">本金 ¥${fmt(data.principal)} + 利息 ¥${fmt(data.interest)}</span>
+        <span style="font-weight:600;">本金 ¥${fmt(data.principal)} + 利息 ¥${fmt(data.interest)}${showComm ? ` + 佣金 ¥${fmt(data.commission)}` : ''}</span>
       </div>
     `).join('')}
     <div class="vchart-detail-total">
       <span>合计</span>
-      <span style="color:var(--green);float:right;">本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)} = ¥${fmt(monthData.totalAmount)}</span>
+      <span style="color:var(--green);float:right;">本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)}${showComm ? ` + 佣金 ¥${fmt(monthData.totalCommission)}` : ''} = ¥${fmt(monthData.totalAmount)}</span>
     </div>
   `;
 }
