@@ -1055,29 +1055,38 @@ function getReinvestLabel(type) {
 
 // ====== DASHBOARD ======
 function renderDashboard() {
-  const totalActive = state.investments
+  // Filter for investors: only show their own data
+  let invs = state.investments;
+  let rets = state.returns;
+  if (isReadOnly && currentUser.role === 'investor' && !currentUser.viewAll) {
+    invs = invs.filter(i => i.investorName === currentUser.name);
+    const myIds = new Set(invs.map(i => i.id));
+    rets = rets.filter(r => myIds.has(r.investId));
+  }
+
+  const totalActive = invs
     .filter(i => getStatus(i) === 'active')
     .reduce((sum, i) => sum + i.amount, 0);
   
-  const totalMatured = state.investments
+  const totalMatured = invs
     .filter(i => getStatus(i) === 'matured')
     .reduce((sum, i) => sum + i.amount, 0);
 
-  const totalInvestors = [...new Set(state.investments.map(i => i.investorName))].length;
+  const totalInvestors = [...new Set(invs.map(i => i.investorName))].length;
   
-  const totalInvested = state.investments.reduce((sum, i) => sum + i.amount, 0);
+  const totalInvested = invs.reduce((sum, i) => sum + i.amount, 0);
 
   // Total returns (commissions earned by broker)
-  const totalCommission = state.returns
+  const totalCommission = rets
     .filter(r => r.type === 'commission')
     .reduce((sum, r) => sum + r.amount, 0);
 
   // Total interest paid to clients
-  const totalInterestPaid = state.returns
+  const totalInterestPaid = rets
     .filter(r => r.type === 'interest_earned')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const totalRedeemed = state.investments
+  const totalRedeemed = invs
     .filter(i => i.status === 'redeemed')
     .reduce((sum, i) => sum + i.amount, 0);
 
@@ -1085,12 +1094,12 @@ function renderDashboard() {
     <div class="dash-card accent">
       <div class="label">📊 管理中的资金</div>
       <div class="value">¥${fmt(totalActive)}</div>
-      <div class="sub">${state.investments.filter(i=>getStatus(i)==='active').length} 笔投资进行中</div>
+      <div class="sub">${invs.filter(i=>getStatus(i)==='active').length} 笔投资进行中</div>
     </div>
     <div class="dash-card green">
       <div class="label">👥 投资人数量</div>
       <div class="value">${totalInvestors}</div>
-      <div class="sub">共 ${state.investments.length} 笔投资记录</div>
+      <div class="sub">共 ${invs.length} 笔投资记录</div>
     </div>
     <div class="dash-card orange">
       <div class="label">💰 累计佣金收入</div>
