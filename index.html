@@ -575,9 +575,10 @@
     <button class="tab active" data-tab="list">📋 投资列表</button>
     <button class="tab" data-tab="investors">👥 按投资人</button>
     <button class="tab" data-tab="returns">📈 收益记录</button>
+    <button class="tab admin-only" data-tab="admin" style="display:none">⚙️ 管理</button>
   </div>
-
-  <!-- Tab: Investment List -->
+  
+  <div class="tab-content active" id="tab-list">
   <div class="tab-content active" id="tab-list">
     <div class="search-bar">
       <input id="searchInput" placeholder="🔍 搜索投资人姓名..." oninput="renderList()">
@@ -752,6 +753,50 @@
         <button type="button" class="btn btn-outline" onclick="closeModal('reinvestModal')">取消</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Admin Tab -->
+<div class="tab-content" id="tab-admin">
+  <div class="section-title" style="margin-top:0">👥 用户管理</div>
+  <div style="background:var(--card);border:var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+    <div style="font-weight:600;font-size:14px;margin-bottom:12px">➕ 添加用户</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>姓名</label>
+        <input type="text" id="newUserName" placeholder="例：张三" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>角色</label>
+        <select id="newUserRole" style="width:100%">
+          <option value="investor">投资人</option>
+          <option value="broker">经纪人</option>
+          <option value="viewer">查看者</option>
+          <option value="admin">管理员</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+      <input type="checkbox" id="newUserViewAll" checked>
+      <label for="newUserViewAll" style="font-size:13px">可查看全部数据</label>
+    </div>
+    <div style="font-size:12px;color:var(--secondary);margin-bottom:12px">
+      💡 用户名根据姓名自动生成拼音，初始密码为 <code style="background:var(--bg);padding:2px 6px;border-radius:4px">initial</code>
+    </div>
+    <button class="btn btn-primary" onclick="adminAddUser()">添加用户</button>
+    <span id="addUserStatus" style="margin-left:12px;font-size:13px"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>用户名</th><th>姓名</th><th>角色</th><th>查看全部</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody id="adminUserTable"></tbody>
+    </table>
+  </div>
+  <div id="adminEmptyState" class="empty-state" style="display:none">
+    <div class="icon">👥</div>
+    <p>暂无用户数据</p>
   </div>
 </div>
 
@@ -1908,6 +1953,14 @@ function applyRoleView() {
     document.querySelector('.tabs').style.display = 'flex';
     document.getElementById('dataLoading').style.display = 'flex';
     loadAllData();
+  } else if (currentUser.role === 'admin') {
+    // Admin - show all + management tab
+    isReadOnly = false;
+    document.querySelectorAll('.header-actions .btn-primary, .header-actions .btn-outline').forEach(b => b.style.display = '');
+    document.querySelector('.tabs').style.display = 'flex';
+    document.querySelectorAll('.admin-only').forEach(b => b.style.display = '');
+    document.getElementById('dataLoading').style.display = 'flex';
+    loadAllData();
   } else {
     // Read-only view
     isReadOnly = true;
@@ -2364,6 +2417,98 @@ renderAll = function() {
     return;
   }
   origRenderAll();
+};
+
+// ====== ADMIN FUNCTIONS ======
+async function adminLoadUsers() {
+  const res = await api('GET', '/api/admin/users');
+  const tbody = document.getElementById('adminUserTable');
+  const empty = document.getElementById('adminEmptyState');
+  if (!res.ok || !res.users || res.users.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = res.users.map(u => `
+    <tr>
+      <td><code>${u.username}</code></td>
+      <td>${u.name || '-'}</td>
+      <td>${roleLabel(u.role)}</td>
+      <td>${u.viewAll ? '✅' : '❌'}</td>
+      <td>${u.blocked ? '<span class="badge badge-red">已锁定</span>' : '<span class="badge badge-green">正常</span>'}</td>
+      <td class="actions-cell">
+        ${u.username !== 'admin' ? `
+          <button class="btn btn-sm ${u.blocked ? 'btn-green' : 'btn-orange'}" onclick="adminToggleBlock('${u.username}', ${!u.blocked})">${u.blocked ? '解锁' : '锁定'}</button>
+          <button class="btn btn-sm btn-primary" onclick="adminResetPwd('${u.username}')">重置密码</button>
+          <button class="btn btn-sm btn-red" onclick="adminDeleteUser('${u.username}')">删除</button>
+        ` : '<span style="color:var(--secondary);font-size:11px">不可操作</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function roleLabel(r) {
+  const map = { admin: '管理员', broker: '经纪人', investor: '投资人', viewer: '查看者' };
+  return map[r] || r;
+}
+
+async function adminAddUser() {
+  const name = document.getElementById('newUserName').value.trim();
+  const role = document.getElementById('newUserRole').value;
+  const viewAll = document.getElementById('newUserViewAll').checked;
+  const status = document.getElementById('addUserStatus');
+  if (!name) { status.textContent = '请输入姓名'; status.style.color = 'var(--red)'; return; }
+  status.textContent = '添加中...';
+  status.style.color = 'var(--secondary)';
+  const res = await api('POST', '/api/admin/users', { name, role, viewAll });
+  if (res.ok) {
+    status.innerHTML = `✅ 已添加: <code>${res.user.username}</code> (密码: <code>initial</code>)`;
+    status.style.color = 'var(--green)';
+    document.getElementById('newUserName').value = '';
+    adminLoadUsers();
+  } else {
+    status.textContent = '失败: ' + (res.error || '未知错误');
+    status.style.color = 'var(--red)';
+  }
+}
+
+async function adminToggleBlock(username, block) {
+  if (!confirm(`${block ? '锁定' : '解锁'}用户 ${username}？`)) return;
+  const res = await api('PUT', '/api/admin/users/' + username, { blocked: block });
+  if (res.ok) adminLoadUsers();
+  else alert('操作失败: ' + (res.error || ''));
+}
+
+async function adminResetPwd(username) {
+  const newPwd = prompt('请输入新密码（至少6位）:', 'initial');
+  if (!newPwd || newPwd.length < 6) { alert('密码至少6位'); return; }
+  const res = await api('PUT', '/api/admin/users/' + username, { password: newPwd });
+  if (res.ok) { alert('密码已重置'); adminLoadUsers(); }
+  else alert('失败: ' + (res.error || ''));
+}
+
+async function adminDeleteUser(username) {
+  if (!confirm(`确定删除用户 ${username}？此操作不可撤销。`)) return;
+  const res = await api('DELETE', '/api/admin/users/' + username);
+  if (res.ok) { alert('已删除'); adminLoadUsers(); }
+  else alert('失败: ' + (res.error || ''));
+}
+
+// Override renderAll to also load admin data
+const origRenderAll2 = renderAll;
+renderAll = function() {
+  if (currentUser && currentUser.role === 'admin') {
+    adminLoadUsers();
+  }
+  origRenderAll2();
+};
+
+// Hook into switchTab to refresh admin data when switching to admin tab
+const origSwitchTab = switchTab;
+switchTab = function(tab) {
+  if (tab === 'admin') adminLoadUsers();
+  origSwitchTab(tab);
 };
 </script>
 </body>
