@@ -762,7 +762,7 @@
         <div class="value" id="realizedReturns">0</div>
       </div>
       <div class="dash-card orange">
-        <div class="label">待收收益（未到期）</div>
+        <div class="label" id="pendingReturnsLabel">待收收益（未到期）</div>
         <div class="value" id="pendingReturns">0</div>
       </div>
       <div class="dash-card accent">
@@ -2288,6 +2288,7 @@ function renderReturns() {
 
   let activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   
+  // Role-based pending: investor=interest, broker=commission, admin/viewer=both
   const pendingInterest = activeInvs.reduce((s, i) => {
     const days = daysBetween(i.investmentDate, today());
     const termDays = daysBetween(i.investmentDate, i.maturityDate);
@@ -2296,10 +2297,22 @@ function renderReturns() {
     .filter(r => myInvs.some(i => i.id === r.investId && getStatus(i) === 'active'))
     .reduce((s, r) => s + r.amount, 0);
 
-  const totalVolume = myInvs.reduce((s, i) => s + i.amount, 0);
+  const pendingCommission = activeInvs.reduce((s, i) => {
+    const days = daysBetween(i.investmentDate, today());
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    return s + calcInterest(i.amount, i.commission || 0, Math.min(days, termDays));
+  }, 0) - relevantReturns.filter(r => r.type === 'commission')
+    .filter(r => myInvs.some(i => i.id === r.investId && getStatus(i) === 'active'))
+    .reduce((s, r) => s + r.amount, 0);
 
+  let pendingLabel = '待收收益（未到期）';
+  let pendingVal = pendingInterest;
+  if (currentUser.role === 'broker') { pendingLabel = '待收佣金（未到期）'; pendingVal = pendingCommission; }
+  else if (currentUser.role === 'admin' || currentUser.role === 'viewer') { pendingLabel = '待收总计（未到期）'; pendingVal = pendingInterest + pendingCommission; }
+  document.getElementById('pendingReturnsLabel').textContent = pendingLabel;
+  document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingVal));
+  const totalVolume = myInvs.reduce((s, i) => s + i.amount, 0);
   document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
-  document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
   document.getElementById('totalManagedVolume').textContent = '¥' + fmt(totalVolume);
 
   const rets = relevantReturns.sort((a, b) => b.date.localeCompare(a.date));
