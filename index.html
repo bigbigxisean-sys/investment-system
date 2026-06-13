@@ -1391,21 +1391,34 @@ function showChartDetail(key, months, colorMap, year) {
     <div style="font-size:11px;color:var(--secondary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">
       到期明细（按到期日排列）
     </div>
-    ${monthData.items.sort((a,b) => a.maturityDate.localeCompare(b.maturityDate)).map(item => `
-      <div class="vchart-detail-item" style="padding:4px 6px;margin:2px 0;background:var(--bg);border-radius:6px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:600;font-size:12px;">${item.investorName}</span>
-          <span style="font-size:11px;color:var(--secondary);">到期 ${fmtDate(item.maturityDate)}</span>
+    ${(() => {
+      // Group items by maturity date
+      const grouped = {};
+      monthData.items.sort((a,b) => a.maturityDate.localeCompare(b.maturityDate)).forEach(item => {
+        if (!grouped[item.maturityDate]) grouped[item.maturityDate] = { items: [], totalAmount: 0, totalInterest: 0, totalCommission: 0 };
+        grouped[item.maturityDate].items.push(item);
+        grouped[item.maturityDate].totalAmount += item.amount;
+        grouped[item.maturityDate].totalInterest += item.interest;
+        grouped[item.maturityDate].totalCommission += item.commissionAmt;
+      });
+      return Object.entries(grouped).map(([date, grp]) => `
+        <div style="margin:4px 0;">
+          <div style="font-size:11px;font-weight:600;color:var(--text);padding:4px 6px;background:var(--accent-light);border-radius:6px 6px 0 0;display:flex;justify-content:space-between;">
+            <span>到期 ${fmtDate(date)}</span>
+            <span>小计: 本金 ¥${fmt(grp.totalAmount)} + 利息 ¥${fmt(grp.totalInterest)}${showComm ? ` + 佣金 ¥${fmt(grp.totalCommission)}` : ''}</span>
+          </div>
+          ${grp.items.map(item => `
+            <div class="vchart-detail-item" style="padding:3px 6px;background:var(--card);border-bottom:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:600;font-size:12px;">${item.investorName}</span>
+                <span style="font-size:11px;color:var(--secondary);">¥${fmt(item.amount)} @ ${item.rate}%</span>
+              </div>
+              <div style="font-size:10px;color:var(--secondary);">利息 ¥${fmt(item.interest)}${showComm ? ` · 佣金 ¥${fmt(item.commissionAmt)}` : ''}</div>
+            </div>
+          `).join('')}
         </div>
-        <div style="font-size:11px;color:var(--secondary);margin-top:2px;">
-          本金 ¥${fmt(item.amount)} @ ${item.rate}% · 利息 ¥${fmt(item.interest)}${showComm ? ` · 佣金 ¥${fmt(item.commissionAmt)}` : ''}
-        </div>
-      </div>
-    `).join('')}
-    <div class="vchart-detail-total">
-      <span>合计</span>
-      <span style="color:var(--green);float:right;">本金 ¥${fmt(monthData.totalPrincipal)} + 利息 ¥${fmt(monthData.totalInterest)}${showComm ? ` + 佣金 ¥${fmt(monthData.totalCommission)}` : ''} = ¥${fmt(monthData.totalAmount)}</span>
-    </div>
+      `).join('');
+    })()}
   `;
 }
 
