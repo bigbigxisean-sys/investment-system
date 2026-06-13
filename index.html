@@ -1296,21 +1296,24 @@ function renderChart() {
 }
 
 function toggleChartDetail(key) {
-  const panel = document.getElementById('vchartDetail');
-  const isOpen = panel.classList.contains('open');
-  const currentKey = panel.dataset.key;
+    const panel = document.getElementById('vchartDetail');
+    const isOpen = panel.classList.contains('open');
+    const currentKey = panel.dataset.key;
 
-  if (isOpen && currentKey === key) {
-    // Close
-    panel.classList.remove('open');
-    panel.innerHTML = '';
-    delete panel.dataset.key;
-    sessionStorage.removeItem('chartOpenMonth');
-    return;
-  }
+    if (isOpen && currentKey === key) {
+      panel.classList.remove('open');
+      panel.innerHTML = '';
+      delete panel.dataset.key;
+      sessionStorage.removeItem('chartOpenMonth');
+      return;
+    }
 
-  // Rebuild data (need to recompute months)
-  const activeInvs = state.investments.filter(i => getStatus(i) === 'active');
+    // Filter for investors
+    let myInvs = state.investments;
+    if (isReadOnly && currentUser.role === 'investor' && !currentUser.viewAll) {
+      myInvs = myInvs.filter(i => i.investorName === currentUser.name);
+    }
+    const activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   const year = chartDisplayYear;
   const months = {};
   for (let m = 1; m <= 12; m++) {
@@ -2271,31 +2274,29 @@ function renderInvestors() {
 
 function renderReturns() {
   let relevantReturns = [...state.returns];
+  let myInvs = [...state.investments];
   if (currentUser.role === 'investor' && !currentUser.viewAll) {
     relevantReturns = relevantReturns.filter(r => {
       const inv = state.investments.find(i => i.id === r.investId);
       return inv && inv.investorName === currentUser.name;
     });
+    myInvs = myInvs.filter(i => i.investorName === currentUser.name);
   }
 
   const totalCommission = relevantReturns.filter(r => r.type === 'commission').reduce((s, r) => s + r.amount, 0);
   const totalInterest = relevantReturns.filter(r => r.type === 'interest_earned').reduce((s, r) => s + r.amount, 0);
 
-  let activeInvs = state.investments.filter(i => getStatus(i) === 'active');
-  if (currentUser.role === 'investor' && !currentUser.viewAll) {
-    activeInvs = activeInvs.filter(i => i.investorName === currentUser.name);
-  }
+  let activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   
   const pendingInterest = activeInvs.reduce((s, i) => {
     const days = daysBetween(i.investmentDate, today());
     const termDays = daysBetween(i.investmentDate, i.maturityDate);
     return s + calcInterest(i.amount, i.rate, Math.min(days, termDays));
   }, 0) - relevantReturns.filter(r => r.type === 'interest_earned')
-    .filter(r => state.investments.find(i => i.id === r.investId && getStatus(i) === 'active'))
+    .filter(r => myInvs.some(i => i.id === r.investId && getStatus(i) === 'active'))
     .reduce((s, r) => s + r.amount, 0);
 
-  const totalVolume = activeInvs.filter(i => i.status === 'redeemed').reduce((s, i) => s + i.amount, 0) + 
-    activeInvs.filter(i => getStatus(i) !== 'redeemed').reduce((s, i) => s + i.amount, 0);
+  const totalVolume = myInvs.reduce((s, i) => s + i.amount, 0);
 
   document.getElementById('realizedReturns').textContent = '¥' + fmt(totalCommission);
   document.getElementById('pendingReturns').textContent = '¥' + fmt(Math.max(0, pendingInterest));
