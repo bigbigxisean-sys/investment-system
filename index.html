@@ -2327,10 +2327,10 @@ function renderReturns() {
   let activeInvs = myInvs.filter(i => getStatus(i) === 'active');
   
   // Role-based pending: investor=interest, broker=commission, admin/viewer=both
-  // Future from today to maturity (proportional to remaining time)
+  // Full term amount (sum of what each party will receive at maturity)
   const pendingInterest = activeInvs.reduce((s, i) => {
-    const remaining = daysBetween(today(), i.maturityDate);
-    return remaining > 0 ? s + calcInterest(i.amount, i.rate, remaining) : s;
+    const termDays = daysBetween(i.investmentDate, i.maturityDate);
+    return s + calcInterest(i.amount, i.rate, termDays);
   }, 0);
 
   const pendingCommission = activeInvs.reduce((s, i) => {
