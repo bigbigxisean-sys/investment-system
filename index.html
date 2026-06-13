@@ -2430,7 +2430,6 @@ function doLogout() {
 }
 
 function showChangePw() {
-  const users = getUsers();
   const uname = currentUser ? currentUser.username : '';
   document.getElementById('cpUser').value = uname || '请先登录';
   document.getElementById('cpOldPass').value = '';
