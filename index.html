@@ -460,101 +460,139 @@
     /* ===== Mobile Responsive (added) ===== */
     @media (max-width: 768px) {
       body { padding: 0; }
-      .container { padding: 0 12px; }
+      .container { padding: 0 10px; }
 
-      /* Header */
-      header { padding: 10px 0; }
-      header .container { flex-wrap: nowrap; gap: 6px; }
-      .logo { font-size: 15px; }
-      .logo-icon { width: 28px; height: 28px; font-size: 13px; }
-      .btn { padding: 6px 10px; font-size: 11px; }
-      .header-actions .btn span { display: none; }
+      /* Header - minimal */
+      header { padding: 8px 0; }
+      header .container { flex-wrap: nowrap; gap: 4px; }
+      .logo { font-size: 14px; gap: 6px; }
+      .logo-icon { width: 26px; height: 26px; font-size: 12px; }
+      .btn { padding: 6px 8px; font-size: 11px; }
+      .header-actions .btn .btn-label { display: none; }
 
-      /* Login overlay */
-      .login-box { width: 92%; max-width: 360px; padding: 24px 20px; }
+      /* Login overlay - full screen */
+      .login-overlay { align-items: flex-start; padding-top: 60px; }
+      .login-box { width: 90%; max-width: 340px; padding: 20px 16px; border-radius: 12px; }
+      .login-box h2 { font-size: 18px; }
+      .login-box input { font-size: 16px !important; padding: 10px !important; }
 
-      /* Dashboard cards */
-      .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-      .dash-card { padding: 12px; }
-      .dash-card .value { font-size: 20px; }
+      /* Dashboard */
+      .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 12px 0; }
+      .dash-card { padding: 10px; }
+      .dash-card .value { font-size: 18px; }
+      .dash-card .label { font-size: 10px; }
+      .dash-card .sub { font-size: 10px; }
 
-      /* Tabs - scrollable */
-      .tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .tab { padding: 8px 6px; font-size: 11px; white-space: nowrap; min-width: 60px; }
-      .tab:first-child { padding-left: 8px; }
+      /* Tabs - horizontal scroll */
+      .tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 2px; }
+      .tab { padding: 8px 10px; font-size: 12px; white-space: nowrap; min-width: auto; flex: 0 0 auto; }
+      .tab:first-child { padding-left: 10px; }
+      .tab:last-child { padding-right: 10px; }
 
-      /* Tables → cards on mobile */
-      .table-wrap { overflow-x: auto; }
-      .table-wrap table { font-size: 11px; }
-      .table-wrap th, .table-wrap td { padding: 6px 4px; white-space: nowrap; }
+      /* Tables - card style on mobile */
+      .table-wrap { overflow-x: auto; margin: 0 -10px; padding: 0 10px; }
+      .table-wrap table { font-size: 11px; min-width: 500px; }
+      .table-wrap th, .table-wrap td { padding: 6px 5px; white-space: nowrap; }
 
-      /* Search bars */
-      .search-bar input { font-size: 12px; padding: 8px !important; }
+      /* Search bar */
+      .search-bar { margin: 8px 0; }
+      .search-bar input { font-size: 13px; padding: 10px 8px !important; border-radius: 8px; }
 
-      /* Stat cards in returns */
-      #tab-returns .dash-grid { grid-template-columns: 1fr 1fr 1fr; }
-      #tab-returns .dash-card { padding: 10px; }
+      /* Filter row */
+      #statusFilter { font-size: 12px; padding: 8px !important; }
+
+      /* List items */
+      .list-item { padding: 10px 12px; margin-bottom: 6px; }
+      .list-name { font-size: 13px; }
+      .list-amount { font-size: 16px; }
+
+      /* Returns tab - compact */
+      #tab-returns .dash-grid { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+      #tab-returns .dash-card { padding: 8px; }
       #tab-returns .dash-card .value { font-size: 14px; }
+      #tab-returns .dash-card .label { font-size: 9px; }
 
       /* Investor cards */
-      .investor-card { padding: 12px; }
-      .investor-stats { gap: 8px; font-size: 11px; }
+      .investor-card { padding: 10px 12px; margin-bottom: 6px; }
+      .investor-header { margin-bottom: 4px; }
+      .investor-name { font-size: 14px; }
+      .investor-stats { gap: 6px; font-size: 11px; flex-direction: column; }
 
-      /* Modals - full screen on mobile */
+      /* Modals - nearly full screen */
+      .modal-overlay { align-items: flex-end; }
       .modal-content {
-        width: 94%;
-        max-width: 400px;
-        max-height: 90vh;
+        width: 100%;
+        max-width: 100%;
+        max-height: 85vh;
         padding: 16px;
-        margin: 0 auto;
+        margin: 0;
+        border-radius: 16px 16px 0 0;
       }
-      .modal-content .form-row { grid-template-columns: 1fr; }
+      .modal-content .form-row { grid-template-columns: 1fr; gap: 8px; }
       .modal-content input[type="text"],
       .modal-content input[type="number"],
       .modal-content input[type="date"],
       .modal-content select {
-        font-size: 16px !important; /* Prevent iOS zoom */
-        padding: 10px !important;
+        font-size: 16px !important;
+        padding: 12px !important;
       }
+      .modal-content label { font-size: 12px; }
+      .modal-content .btn { padding: 12px; font-size: 14px; justify-content: center; }
 
-      /* Form groups */
+      /* Form in general */
       .form-row { grid-template-columns: 1fr; gap: 8px; }
-      .form-group label { font-size: 11px; }
-      .form-group input, .form-group select { font-size: 14px; padding: 8px; }
+      .form-group label { font-size: 12px; }
+      .form-group input, .form-group select { font-size: 16px; padding: 10px; }
 
       /* User menu */
-      .user-menu-box { width: 92%; max-width: 340px; padding: 20px; }
-
-      /* Section titles */
-      .section-title { font-size: 14px; margin: 12px 0 8px; }
-
-      /* Action buttons in tables */
-      .actions-cell .btn-sm { padding: 4px 8px; font-size: 10px; }
-
-      /* Monthly chart */
-      .chart-container { height: 200px; }
-
-      /* Dashboard forecast */
-      .forecast-grid { grid-template-columns: 1fr; }
-
-      /* Year tabs */
-      #yearTabs { gap: 2px; }
-      #yearTabs .year-tab { padding: 4px 8px; font-size: 10px; }
-
-      /* Empty states */
-      .empty-state { padding: 20px 10px; }
-      .empty-state .icon { font-size: 32px; }
-
-      /* Badges */
-      .badge { font-size: 8px; padding: 1px 5px; }
-
-      /* Fix filter select */
-      #statusFilter { font-size: 11px; padding: 6px !important; }
+      .user-menu-box { width: 90%; max-width: 320px; padding: 20px; }
+      .user-menu-box .name { font-size: 16px; }
+      .user-menu-box .role { font-size: 12px; }
 
       /* Admin section */
       #tab-admin .table-wrap td,
-      #tab-admin .table-wrap th { font-size: 10px; padding: 4px 3px; }
+      #tab-admin .table-wrap th { font-size: 10px; padding: 5px 4px; }
       #tab-admin .table-wrap code { font-size: 9px; }
+      #tab-admin .btn-sm { padding: 4px 6px; font-size: 9px; }
+
+      /* Monthly chart */
+      .chart-container { height: 180px; }
+
+      /* Year tabs */
+      #yearTabs { gap: 4px; overflow-x: auto; flex-wrap: nowrap; }
+      #yearTabs .year-tab { padding: 6px 12px; font-size: 11px; white-space: nowrap; flex: 0 0 auto; }
+
+      /* Monthly grid */
+      .month-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .month-card { padding: 8px; }
+      .month-card .amount { font-size: 13px; }
+
+      /* Empty states */
+      .empty-state { padding: 30px 10px; }
+      .empty-state .icon { font-size: 36px; }
+      .empty-state p { font-size: 13px; }
+
+      /* Badges */
+      .badge { font-size: 9px; padding: 2px 6px; }
+
+      /* Buttons in tables */
+      .actions-cell { white-space: nowrap; }
+      .actions-cell .btn-sm { padding: 5px 8px; font-size: 10px; margin: 1px; }
+
+      /* Section title */
+      .section-title { font-size: 14px; margin: 14px 0 8px; }
+
+      /* Forecast grid */
+      .forecast-grid { grid-template-columns: 1fr; gap: 8px; }
+
+      /* Investor detail rows */
+      .investor-detail { font-size: 12px; }
+
+      /* Trend chart */
+      .trend-chart { height: 160px; }
+
+      /* Excel import */
+      #importInput { font-size: 12px; }
     }
 
     /* Very small screens */
