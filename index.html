@@ -1233,12 +1233,13 @@ function renderChart() {
   // Y-axis + bars container
   chartHTML += '<div class="vchart-container" style="padding-left:72px;">';
   
-  // Y-axis labels (absolute positioned)
+  // Y-axis labels (absolute positioned) - DOM order = top→bottom = max→0 (flex column starts first child at top)
   chartHTML += '<div class="vchart-yaxis">';
-  yTicks.forEach((t, i) => {
-    const cls = i === 0 ? ' vchart-yaxis-zero' : '';
+  for (let i = yTicks.length - 1; i >= 0; i--) {
+    const t = yTicks[i];
+    const cls = t.val === 0 ? ' vchart-yaxis-zero' : '';
     chartHTML += `<div class="vchart-ylabel${cls}"><span>${t.label}</span></div>`;
-  });
+  }
   chartHTML += '</div>';
 
   // Month columns
