@@ -1302,6 +1302,59 @@ function renderChart() {
   });
   chartHTML += '</div>';
 
+  // ---- Annual per-investor summary for the selected year ----
+  const annInvestors = {};
+  Object.values(months).forEach(m => {
+    Object.entries(m.byInvestor).forEach(([name, d]) => {
+      if (!annInvestors[name]) annInvestors[name] = { principal: 0, interest: 0, commission: 0 };
+      annInvestors[name].principal += d.principal;
+      annInvestors[name].interest += d.interest;
+      annInvestors[name].commission += d.commission;
+    });
+  });
+  const annRows = Object.entries(annInvestors).filter(([, d]) => d.principal > 0).sort((a, b) => b[1].principal - a[1].principal);
+  if (annRows.length) {
+    const gP = annRows.reduce((s, [, d]) => s + d.principal, 0);
+    const gI = annRows.reduce((s, [, d]) => s + d.interest, 0);
+    const gC = annRows.reduce((s, [, d]) => s + d.commission, 0);
+    const gT = gP + gI + (showCommission ? gC : 0);
+    chartHTML += `
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">${year}年 投资人汇总（本金 / 利息${showCommission ? ' / 佣金' : ''}）</div>
+      <div class="table-wrap" style="margin:0;padding:0;">
+        <table style="width:100%;min-width:420px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;">投资人</th>
+              <th style="text-align:right;">本金</th>
+              <th style="text-align:right;">利息</th>
+              ${showCommission ? '<th style="text-align:right;">佣金</th>' : ''}
+              <th style="text-align:right;">小计</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${annRows.map(([name, d]) => `
+              <tr>
+                <td style="text-align:left;"><span class="vchart-legend-dot" style="background:${colorMap[name]}"></span>${name}</td>
+                <td style="text-align:right;">¥${fmt(d.principal)}</td>
+                <td style="text-align:right;">¥${fmt(d.interest)}</td>
+                ${showCommission ? `<td style="text-align:right;">¥${fmt(d.commission)}</td>` : ''}
+                <td style="text-align:right;font-weight:600;">¥${fmt(d.principal + d.interest + (showCommission ? d.commission : 0))}</td>
+              </tr>
+            `).join('')}
+            <tr style="font-weight:700;background:var(--accent-light);">
+              <td style="text-align:left;">合计</td>
+              <td style="text-align:right;">¥${fmt(gP)}</td>
+              <td style="text-align:right;">¥${fmt(gI)}</td>
+              ${showCommission ? `<td style="text-align:right;">¥${fmt(gC)}</td>` : ''}
+              <td style="text-align:right;">¥${fmt(gT)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
   chartHTML += '</div>'; // vchart-wrap
 
   container.innerHTML = chartHTML;
